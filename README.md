@@ -17,4 +17,11 @@ A website that runs itself. It targets the "ai agents" keywords listed in `keywo
 To target more keywords, add entries to `keywords.json`.
 
 ## Cost
-$0: public GitHub repo (free Actions + Pages), GitHub Models free tier for text, Pollinations free tier for pictures. Pictures arrive a few per day; until then each page shows a generated cover. Optional custom domain ~$10/year.
+$0: public GitHub repo (free Actions + Pages), GitHub Models free tier for text, pictures are watermark-free generated covers, or Cloudflare Workers AI (free tier) if you add the two CF secrets. Optional custom domain ~$10/year.
+
+## Watermark-free AI pictures (optional, free)
+1. Create a free Cloudflare account at dash.cloudflare.com.
+2. Copy your **Account ID** (right side of the dashboard home page).
+3. My Profile → API Tokens → Create Token → template **"Workers AI"** → create, then copy the token.
+4. In the GitHub repo: Settings → Secrets → Actions → add `CF_ACCOUNT_ID` and `CF_API_TOKEN`.
+Without these, every page uses the site's own generated covers (also no watermark).

@@ -8,7 +8,7 @@
 Every day 06:17 UTC (GitHub Actions)
   1. generate.mjs:  guides (AI writes each one once, rewrites every 90 days)
                     news digest built from Google News RSS headlines (1 a day)
-                    pictures from Pollinations (a few a day, until all done)
+                    pictures from Cloudflare Workers AI, if set up
   2. commit the new content to the repo
   3. build.mjs:     static HTML, sitemap, RSS, structured data
   4. deploy to GitHub Pages
@@ -17,7 +17,7 @@ Every day 06:17 UTC (GitHub Actions)
 | Part | Tool | Cost |
 |---|---|---|
 | Text | GitHub Models (free tier, built-in token) | $0 |
-| Pictures | Pollinations, with a generated SVG cover as fallback | $0 |
+| Pictures | Cloudflare Workers AI FLUX (free, no watermark), or built-in SVG covers | $0 |
 | Automation | GitHub Actions (public repo) | $0 |
 | Hosting | GitHub Pages | $0 |
 | Domain (optional, recommended) | any registrar | ~$10/year |

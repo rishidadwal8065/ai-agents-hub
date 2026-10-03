@@ -25,6 +25,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # optional, paid
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }} # optional, free: watermark-free AI pictures
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: npm run generate
       - name: Commit content
         if: github.event_name != 'push'
