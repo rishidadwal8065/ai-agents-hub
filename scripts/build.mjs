@@ -11,12 +11,22 @@ const SITE = (process.env.SITE_URL || cfg.site.url).replace(/\/$/, "");
 const BASE = new URL(SITE).pathname.replace(/\/$/, "");
 const css = fs.readFileSync(path.join(ROOT, "public/style.css"), "utf8");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const strip = (s) => String(s).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+const slugify = (s) => strip(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const year = new Date().getFullYear();
+
+// H2/H3 get ids so the table of contents can link to them.
+marked.use({ renderer: { heading({ tokens, depth }) {
+  const text = this.parser.parseInline(tokens);
+  return `<h${depth} id="${slugify(text)}">${text}</h${depth}>\n`;
+} } });
 
 function read(file) {
   const raw = fs.readFileSync(file, "utf8");
   const m = raw.match(/^---\n([\s\S]*?)\n---\n/);
   const meta = Object.fromEntries(m[1].split("\n").map((l) => { const i = l.indexOf(":"); return [l.slice(0, i), JSON.parse(l.slice(i + 1))]; }));
-  return { meta, html: marked.parse(raw.slice(m[0].length)) };
+  const md = raw.slice(m[0].length);
+  return { meta, html: marked.parse(md), minutes: Math.max(1, Math.round(md.split(/\s+/).length / 220)) };
 }
 const mdFiles = (dir) => fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".md")) : [];
 
@@ -35,80 +45,128 @@ function cover(name, label) {
   const lines = [""];
   for (const w of String(label).split(" ")) {
     const next = `${lines.at(-1)} ${w}`.trim();
-    if (next.length > 24 && lines.at(-1)) lines.push(w); else lines[lines.length - 1] = next;
+    if (next.length > 22 && lines.at(-1)) lines.push(w); else lines[lines.length - 1] = next;
   }
-  const circles = [0, 1, 2, 3, 4].map((i) => `<circle cx="${880 + i * 50}" cy="${110 + i * 95}" r="${30 + i * 14}" fill="#fff" opacity=".09"/>`).join("");
-  const text = lines.slice(0, 3).map((l, i) => `<text x="80" y="${250 + i * 82}" font-family="system-ui,sans-serif" font-size="68" font-weight="700" fill="#fff">${esc(l)}</text>`).join("");
-  fs.writeFileSync(path.join(DIST, "images", `${name}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h},65%,45%)"/><stop offset="1" stop-color="hsl(${(h + 60) % 360},65%,28%)"/></linearGradient></defs><rect width="1200" height="630" fill="url(#g)"/>${circles}${text}<text x="80" y="560" font-family="system-ui,sans-serif" font-size="30" fill="#fff" opacity=".8">${esc(cfg.site.name)}</text></svg>`);
+  const nodes = [[860, 160], [1020, 250], [900, 380], [1080, 450], [760, 300]];
+  const graph = nodes.map(([x, y], i) => `<line x1="${x}" y1="${y}" x2="${nodes[(i + 1) % 5][0]}" y2="${nodes[(i + 1) % 5][1]}" stroke="#fff" stroke-opacity=".25" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${18 + (i % 3) * 8}" fill="#fff" fill-opacity="${0.15 + (i % 3) * 0.1}"/>`).join("");
+  const text = lines.slice(0, 3).map((l, i) => `<text x="72" y="${240 + i * 84}" font-family="system-ui,sans-serif" font-size="72" font-weight="800" fill="#fff">${esc(l)}</text>`).join("");
+  fs.writeFileSync(path.join(DIST, "images", `${name}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h},70%,50%)"/><stop offset="1" stop-color="hsl(${(h + 50) % 360},70%,28%)"/></linearGradient></defs><rect width="1200" height="630" fill="url(#g)"/>${graph}${text}<text x="72" y="560" font-family="system-ui,sans-serif" font-size="30" font-weight="600" fill="#fff" fill-opacity=".85">${esc(cfg.site.name)}</text></svg>`);
   return `/images/${name}.svg`;
 }
-const hero = (src, alt) => `<img class="hero" src="${src}" alt="${esc(alt)}" width="1200" height="630">`;
-const thumb = (src) => `<img src="${src}" alt="" width="1200" height="630" loading="lazy">`;
 
+const NAV = [["/", "Home"], ["/what-are-ai-agents/", "Basics"], ["/ai-agents-examples/", "Examples"], ["/how-to-build-ai-agents/", "Build"], ["/ai-agents-for-business/", "Business"], ["/ai-agents-news/", "News"]];
 const urls = [];
-function page(route, { title, description, body, jsonld, date, image }) {
+function page(route, { title, description, body, jsonld = [], date, image, wide }) {
   const canonical = `${SITE}${route}`;
   urls.push({ loc: canonical, lastmod: date });
-  const nav = [["/", "Home"], ["/what-are-ai-agents/", "What are AI agents"], ["/how-to-build-ai-agents/", "Build"], ["/ai-agents-news/", "News"]];
   const og = image ? `<meta property="og:image" content="${SITE}${image}"><meta name="twitter:card" content="summary_large_image">` : "";
+  const ld = [].concat(jsonld).map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</script>`).join("");
+  const nav = NAV.map(([h, t]) => `<a href="${h}"${h === route ? ' aria-current="page"' : ""}>${t}</a>`).join("");
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${canonical}">
-<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:type" content="article">${og}
-<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="${esc(cfg.site.name)}">
-${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ""}<style>${css}</style></head>
-<body><header><a class="brand" href="/">${esc(cfg.site.name)}</a><nav>${nav.map(([h, t]) => `<a href="${h}">${t}</a>`).join("")}</nav></header>
-<main>${body}</main><footer><p>${esc(cfg.site.name)} — ${esc(cfg.site.tagline)}. Articles and images are AI-generated and updated automatically; check sources before acting.</p></footer></body></html>`;
-  const withBase = html.replace(/(href|src)="\/(?!\/)/g, `$1="${BASE}/`);
+<meta name="theme-color" content="#4338ca"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%236366f1'/%3E%3Ccircle cx='16' cy='16' r='6' fill='white'/%3E%3C/svg%3E">
+<meta property="og:site_name" content="${esc(cfg.site.name)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:type" content="article">${og}
+<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="${esc(cfg.site.name)}">${ld}<style>${css}</style></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="in"><a class="brand" href="/"><i aria-hidden="true"></i>${esc(cfg.site.name)}</a><nav aria-label="Main">${nav}</nav></div></header>
+<main id="main" class="wrap">${body}</main>
+<footer><div class="in"><span>© ${year} ${esc(cfg.site.name)} · ${esc(cfg.site.tagline)}</span><span><a href="/ai-agents-news/">News</a> · <a href="/feed.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a></span></div></footer></body></html>`;
   const out = path.join(DIST, route, "index.html");
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  fs.writeFileSync(out, withBase);
+  fs.writeFileSync(out, html.replace(/(href|src)="\/(?!\/)/g, `$1="${BASE}/`));
 }
 
-const article = (meta, url, image) => ({ "@context": "https://schema.org", "@type": "Article", headline: meta.title, description: meta.description, image: `${SITE}${image}`, dateModified: meta.updated || meta.date, datePublished: meta.date || meta.updated, mainEntityOfPage: url, publisher: { "@type": "Organization", name: cfg.site.name } });
+const articleLd = (type, meta, url, image) => ({ "@context": "https://schema.org", "@type": type, headline: meta.title, description: meta.description, image: `${SITE}${image}`, dateModified: meta.updated || meta.date, datePublished: meta.date || meta.updated, mainEntityOfPage: url, author: { "@type": "Organization", name: cfg.site.name }, publisher: { "@type": "Organization", name: cfg.site.name } });
+const crumbsLd = (items) => ({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.map(([name, p], i) => ({ "@type": "ListItem", position: i + 1, name, item: `${SITE}${p}` })) });
+// FAQ section -> FAQPage rich result.
+function faqLd(html) {
+  const faq = html.split(/<h2 id="faq">/)[1];
+  if (!faq) return [];
+  const qa = [...faq.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>\s*<p>([\s\S]*?)<\/p>/g)].map(([, q, a]) => ({ "@type": "Question", name: strip(q), acceptedAnswer: { "@type": "Answer", text: strip(a) } }));
+  return qa.length ? [{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: qa }] : [];
+}
+function toc(html) {
+  const hs = [...html.matchAll(/<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g)];
+  if (hs.length < 3) return "";
+  const items = hs.map(([, id, t]) => `<li><a href="#${id}">${t}</a></li>`).join("");
+  return `<aside class="toc" aria-label="On this page"><b>On this page</b><ol>${items}</ol></aside>`;
+}
+const img = (src, alt, lazy = true) => `<img src="${src}" alt="${esc(alt)}" width="1200" height="630"${lazy ? ' loading="lazy"' : ' fetchpriority="high"'}>`;
+const card = (href, image, title, desc, label = "") => `<li><a class="card" href="${href}">${img(image, "")}<div>${label ? `<small>${label}</small>` : ""}<strong>${esc(title)}</strong><span>${esc(desc)}</span></div></a></li>`;
+const newsList = (ds) => ds.length ? `<ul class="news-list">${ds.map((d) => `<li><a href="/news/${d.meta.date}/">${img(d.image, "")}<div><strong>${esc(d.meta.title)}</strong><span>${fmt(d.meta.date)} · ${d.minutes} min read</span></div></a></li>`).join("")}</ul>` : `<p class="empty">The first daily digest is on its way — check back tomorrow.</p>`;
+const fmt = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+function articlePage({ route, meta, html, minutes, image, crumbs, type, after = "" }) {
+  const url = `${SITE}${route}`;
+  const trail = crumbs.map(([n, p]) => `<a href="${p}">${esc(n)}</a>`).join(" › ");
+  page(route, { ...meta, image, date: meta.updated || meta.date,
+    jsonld: [articleLd(type, meta, url, image), crumbsLd([...crumbs, [meta.title, route]]), ...faqLd(html)],
+    body: `<div class="article"><article><nav class="crumbs" aria-label="Breadcrumb">${trail}</nav><h1>${esc(meta.title)}</h1>
+<p class="meta"><span>${meta.updated ? "Updated" : "Published"} ${fmt(meta.updated || meta.date)}</span><span>${minutes} min read</span></p>
+${img(image, meta.title, false).replace("<img", '<img class="hero"')}<div class="prose">${html}</div>
+<p class="note">This page is researched and written with AI and refreshed automatically. Check the linked sources before you rely on it.</p>${after}</article>${toc(html)}</div>` });
+}
 
 // Evergreen guides
 const guides = [];
 for (const f of mdFiles(path.join(ROOT, "content/pages"))) {
-  const { meta, html } = read(path.join(ROOT, "content/pages", f));
+  const d = read(path.join(ROOT, "content/pages", f));
   const slug = f.replace(/\.md$/, "");
-  const image = cover(slug, meta.keyword);
-  guides.push({ slug, image, ...meta });
-  page(`/${slug}/`, { ...meta, image, date: meta.updated, jsonld: article(meta, `${SITE}/${slug}/`, image),
-    body: `<article><h1>${esc(meta.title)}</h1><p class="meta">Updated ${meta.updated}</p>${hero(image, meta.title)}${html}</article>` });
+  guides.push({ slug, image: cover(slug, d.meta.keyword), ...d });
 }
+// Order guides the way keywords.json lists them (beginner -> advanced).
+const order = cfg.pages.map((p) => p.slug);
+guides.sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
 
 // News digests, newest first
 const digests = mdFiles(path.join(ROOT, "content/news")).sort().reverse().map((f) => ({ f, ...read(path.join(ROOT, "content/news", f)) }));
-for (const d of digests) {
-  d.image = cover(`news-${d.meta.date}`, d.meta.title);
-  page(`/news/${d.meta.date}/`, { ...d.meta, image: d.image, jsonld: { ...article(d.meta, `${SITE}/news/${d.meta.date}/`, d.image), "@type": "NewsArticle" },
-    body: `<article><p class="meta"><a href="/ai-agents-news/">AI agents news</a> · ${d.meta.date}</p><h1>${esc(d.meta.title)}</h1>${hero(d.image, d.meta.title)}${d.html}</article>` });
+for (const d of digests) d.image = cover(`news-${d.meta.date}`, d.meta.title);
+
+for (const g of guides) {
+  const related = guides.filter((x) => x !== g).slice(0, 3);
+  const after = related.length ? `<div class="sec-head"><h2>Keep reading</h2></div><ul class="grid">${related.map((r) => card(`/${r.slug}/`, r.image, r.meta.title, r.meta.description, "Guide")).join("")}</ul>` : "";
+  articlePage({ route: `/${g.slug}/`, ...g, type: "Article", crumbs: [["Home", "/"], ["Guides", "/#guides"]], after });
 }
-const list = (ds) => ds.length ? `<ul class="cards">${ds.map((d) => `<li><a href="/news/${d.meta.date}/">${thumb(d.image)}<strong>${esc(d.meta.title)}</strong><span>${d.meta.date} — ${esc(d.meta.description)}</span></a></li>`).join("")}</ul>` : `<p class="empty">The first digest is being written — check back tomorrow.</p>`;
-const year = new Date().getFullYear();
+for (const d of digests) {
+  articlePage({ route: `/news/${d.meta.date}/`, ...d, type: "NewsArticle", crumbs: [["Home", "/"], ["AI agents news", "/ai-agents-news/"]],
+    after: `<div class="sec-head"><h2>More AI agents news</h2><a href="/ai-agents-news/">All digests →</a></div>${newsList(digests.filter((x) => x !== d).slice(0, 4))}` });
+}
+
+// News hub + topic pages
 const hub = cfg.news.hub;
 const hubImg = cover(hub.slug, "AI agents news");
-page(`/${hub.slug}/`, { image: hubImg, title: `AI Agents News ${year}: Daily Updates & Agentic AI Breakthroughs`, date: digests[0]?.meta.date,
+const latest = digests[0];
+page(`/${hub.slug}/`, { image: hubImg, date: latest?.meta.date,
+  title: `AI Agents News ${year}: Daily Updates & Agentic AI Breakthroughs`,
   description: `Daily AI agents news and updates for ${year}: launches, agentic AI breakthroughs, enterprise adoption and trends from X/Twitter — summarised with sources.`,
-  body: `<h1>AI agents news (${year})</h1>${hero(hubImg, "AI agents news")}<p class="lead">A daily, sourced digest of AI agents updates: product launches, agentic AI breakthroughs, enterprise and commerce adoption, and what's trending in agentic tools.</p>${digests[0] ? `<h2>Latest: ${esc(digests[0].meta.title)}</h2>${digests[0].html}<h2>Archive</h2>` : ""}${list(digests.slice(1))}` });
+  jsonld: crumbsLd([["Home", "/"], ["AI agents news", `/${hub.slug}/`]]),
+  body: `<section class="hero-band"><span class="eyebrow">Updated daily</span><h1>AI agents news (${year})</h1><p class="lead">One short, sourced digest a day: launches, agentic AI breakthroughs, enterprise and commerce adoption, and what's trending in agent tools.</p></section>
+${latest ? `<div class="sec-head"><h2>Today's digest</h2></div><ul class="grid feature">${card(`/news/${latest.meta.date}/`, latest.image, latest.meta.title, latest.meta.description, fmt(latest.meta.date))}</ul><div class="sec-head"><h2>Archive</h2></div>` : ""}${newsList(digests.slice(1))}` });
 for (const t of cfg.news.topicPages) {
   const ds = digests.filter((d) => (d.meta.topics || []).includes(t.topic));
-  const image = cover(t.slug, t.keyword);
-  page(`/${t.slug}/`, { image, title: `${t.keyword.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bAi\b/g, "AI")} (${year})`, date: ds[0]?.meta.date,
+  const title = t.keyword.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bAi\b/g, "AI");
+  page(`/${t.slug}/`, { image: cover(t.slug, t.keyword), date: ds[0]?.meta.date, title: `${title} (${year})`,
     description: `Latest ${t.keyword}: daily digests covering ${t.topic} and AI agents, with links to original sources.`,
-    body: `<h1>${esc(t.keyword.replace(/^\w/, (c) => c.toUpperCase()))}</h1>${hero(image, t.keyword)}<p class="lead">Digests that include ${esc(t.topic)} AI agent stories.</p>${list(ds)}` });
+    jsonld: crumbsLd([["Home", "/"], ["AI agents news", `/${hub.slug}/`], [title, `/${t.slug}/`]]),
+    body: `<section class="hero-band"><nav class="crumbs"><a href="/">Home</a> › <a href="/${hub.slug}/">AI agents news</a></nav><h1>${esc(title)}</h1><p class="lead">Every daily digest that covers ${esc(t.topic)} and AI agents, newest first.</p></section>${newsList(ds)}` });
 }
 
 // Home
-page("/", { image: hubImg, title: `${cfg.site.name} — What AI Agents Are, Examples, How to Build Them & Daily News`, date: digests[0]?.meta.date,
-  description: "Clear guides to AI agents: what they are, examples, the best tools, how to build them, business and enterprise use — plus daily AI agents news.",
+const start = guides.find((g) => g.slug === "what-are-ai-agents");
+page("/", { image: hubImg, date: latest?.meta.date,
+  title: `${cfg.site.name}: What AI Agents Are, Examples, How to Build Them & Daily News`,
+  description: "Clear guides to AI agents: what they are, real examples, the best tools, how to build them, business and enterprise use — plus daily AI agents news.",
   jsonld: { "@context": "https://schema.org", "@type": "WebSite", name: cfg.site.name, url: SITE },
-  body: `<h1>AI agents, explained — and tracked daily</h1><p class="lead">${esc(cfg.site.tagline)}.</p>
-<h2>Guides</h2>${guides.length ? `<ul class="cards">${guides.map((g) => `<li><a href="/${g.slug}/">${thumb(g.image)}<strong>${esc(g.title)}</strong><span>${esc(g.description)}</span></a></li>`).join("")}</ul>` : `<p class="empty">Guides are being written.</p>`}
-<h2>Latest AI agents news</h2>${list(digests.slice(0, 5))}` });
+  body: `<section class="hero-band"><span class="eyebrow">Guides + daily news</span><h1>AI agents, explained simply and tracked daily</h1>
+<p class="lead">Learn what AI agents are and how to use or build them, and keep up with the news in five minutes a day.</p>
+<div class="cta"><a class="btn primary" href="/what-are-ai-agents/">Start with the basics</a><a class="btn" href="/ai-agents-news/">Today's news</a></div>
+<ul class="chips">${cfg.pages.slice(1, 7).map((p) => `<li><a href="/${p.slug}/">${esc(p.keyword)}</a></li>`).join("")}</ul></section>
+${start ? `<div class="sec-head"><h2>Start here</h2></div><ul class="grid feature">${card(`/${start.slug}/`, start.image, start.meta.title, start.meta.description, `${start.minutes} min read`)}</ul>` : ""}
+<div class="sec-head" id="guides"><h2>Guides</h2></div>${guides.length ? `<ul class="grid">${guides.filter((g) => g !== start).map((g) => card(`/${g.slug}/`, g.image, g.meta.title, g.meta.description, `${g.minutes} min read`)).join("")}</ul>` : `<p class="empty">The guides are being written. The first ones appear after the next daily run.</p>`}
+<div class="sec-head"><h2>Latest AI agents news</h2><a href="/ai-agents-news/">All news →</a></div>${newsList(digests.slice(0, 5))}` });
 
 // 404, sitemap, robots, RSS
-page("/404/", { title: "Page not found", description: "Not found", body: `<h1>Page not found</h1><p><a href="/">Go home</a></p>` });
+page("/404/", { title: "Page not found", description: "Not found", body: `<section class="hero-band"><h1>Page not found</h1><p class="lead">That page has moved or never existed.</p><div class="cta"><a class="btn primary" href="/">Go home</a><a class="btn" href="/ai-agents-news/">Latest news</a></div></section>` });
 fs.renameSync(path.join(DIST, "404/index.html"), path.join(DIST, "404.html"));
 fs.rmSync(path.join(DIST, "404"), { recursive: true });
 urls.pop();
