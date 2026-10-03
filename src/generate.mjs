@@ -46,6 +46,31 @@ Line 1: "TITLE: " + an SEO title of at most 60 characters that contains "${p.key
 Line 2: "DESC: " + a meta description of at most 155 characters with the keyword and a reason to click.
 Then a blank line and the article.`;
 
+/** Thrown once the provider's free daily allowance is used up; ends AI work for this run. */
+export class BudgetExhausted extends Error {}
+
+/**
+ * Wraps the model so the first "daily allowance used up" error stops all further calls this run.
+ * @param {Complete | null} complete
+ * @param {(m: string) => void} log
+ * @returns {Complete | null}
+ */
+function withBudget(complete, log) {
+  if (!complete) return null;
+  let spent = false;
+  return async (system, prompt) => {
+    if (spent) throw new BudgetExhausted("daily AI allowance used up");
+    try { return await complete(system, prompt); } catch (e) {
+      if (/daily free allocation|"code":\s*4006|quota exceeded/i.test(String(e instanceof Error ? e.message : e))) {
+        spent = true;
+        log("AI daily allowance used up: the remaining work waits for the next run.");
+        throw new BudgetExhausted("daily AI allowance used up");
+      }
+      throw e;
+    }
+  };
+}
+
 /** @param {string} file */
 function readMeta(file) {
   return fs.existsSync(file) ? parseFrontmatter(fs.readFileSync(file, "utf8"))?.meta ?? null : null;
@@ -81,11 +106,14 @@ async function writeGuide(complete, system, prompt, log, slug) {
 async function guides({ cfg, contentDir, today, complete, log = console.log }) {
   if (!complete) return;
   const links = [...cfg.pages.map((/** @type {any} */ p) => `- [${p.keyword}](/${p.slug}/)`), "- [ai agents news](/ai-agents-news/)"].join("\n");
+  let attempts = 0;
+  const max = Number.isInteger(cfg.maxGuidesPerRun) ? cfg.maxGuidesPerRun : Infinity;
   for (const p of cfg.pages) {
     const file = path.join(contentDir, "pages", `${p.slug}.md`);
     const meta = readMeta(file);
     const current = meta && Number(meta.version ?? 1) >= CONTENT_VERSION;
     if (current && !isStale(meta.updated, REFRESH_DAYS, Date.parse(today))) continue;
+    if (attempts++ >= max) { log(`pages: limit of ${max} per run reached, the rest follow tomorrow`); break; }
     try {
       const out = await writeGuide(complete, systemPrompt(cfg), guidePrompt(p, today, links), log, p.slug);
       if (!out) continue;
@@ -94,6 +122,7 @@ async function guides({ cfg, contentDir, today, complete, log = console.log }) {
       fs.writeFileSync(file, toFrontmatter({ title, description: out.fields.DESC.slice(0, 160), keyword: p.keyword, updated: today, version: CONTENT_VERSION }) + out.body + "\n");
       log(`page ${p.slug}: written`);
     } catch (e) {
+      if (e instanceof BudgetExhausted) return;
       // Free tiers rate-limit; leave this page for the next run.
       log(`page ${p.slug}: ${e instanceof Error ? e.message : e}`);
     }
@@ -230,16 +259,20 @@ SOURCE>>>`), ["TITLE", "DESC"]);
       fs.writeFileSync(path.join(dir, `${job.id}.md`), toFrontmatter(meta) + out.body + "\n");
       log(`translate ${job.lang}/${job.kind}/${job.id}: written`);
     } catch (e) {
+      if (e instanceof BudgetExhausted) return;
       log(`translate ${job.lang}/${job.id}: ${e instanceof Error ? e.message : e}`);
     }
   }
 }
 
-/** @param {Options} o */
-export async function generate(o) {
+/** @param {Options} input */
+export async function generate(input) {
+  const log = input.log ?? console.log;
+  const o = { ...input, log, complete: withBudget(input.complete, log) };
   for (const d of ["pages", "news", "images"]) fs.mkdirSync(path.join(o.contentDir, d), { recursive: true });
+  // Most important first: today's news, then guide rewrites, then translations (free daily allowance).
+  try { await news(o); } catch (e) { if (!(e instanceof BudgetExhausted)) log(`news: ${e instanceof Error ? e.message : e}`); }
   await guides(o);
-  try { await news(o); } catch (e) { (o.log ?? console.log)(`news: ${e instanceof Error ? e.message : e}`); }
   await translations(o);
   await images(o);
 }

@@ -10,6 +10,7 @@ import { parseFrontmatter } from "../../src/lib/content.mjs";
 const cfg = JSON.parse(fs.readFileSync(new URL("../../keywords.json", import.meta.url), "utf8"));
 // Translation has its own tests below; the base tests run with it off.
 delete cfg.translation;
+delete cfg.maxGuidesPerRun;
 const RSS = `<rss><channel>${[1, 2, 3, 4].map((i) => `<item><title>Headline ${i}</title><link>https://news.example/${i}</link><source>Wire</source><pubDate>Sat</pubDate></item>`).join("")}</channel></rss>`;
 
 function setup() {
@@ -60,7 +61,7 @@ test("an AI outage on one page does not stop the others", async () => {
   const dir = setup();
   let n = 0;
   /** @type {import("../../src/generate.mjs").Complete} */
-  const flaky = async (s, p) => { if (n++ === 0) throw new Error("429 rate limited"); return fakeAi([])(s, p); };
+  const flaky = async (s, p) => { if (!p.includes("news digest") && n++ === 0) throw new Error("429 rate limited"); return fakeAi([])(s, p); };
   await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: flaky, fetchFn: fakeFetch, log: () => {} });
   assert.equal(fs.readdirSync(path.join(dir, "pages")).length, cfg.pages.length - 1);
 });
@@ -182,4 +183,34 @@ test("a generic digest title is replaced by the top headline", async () => {
   await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: ai, fetchFn: fakeFetch, log: () => {} });
   const d = parseFrontmatter(fs.readFileSync(path.join(dir, "news/2026-10-04.md"), "utf8"));
   assert.equal(d?.meta.title, "Headline 1");
+});
+
+// --- Daily AI budget --------------------------------------------------------------------
+
+test("the daily digest is written before guides, so a tight budget never skips the news", async () => {
+  const dir = setup();
+  /** @type {string[]} */
+  const order = [];
+  /** @type {import("../../src/generate.mjs").Complete} */
+  const ai = async (s, p) => { order.push(p.includes("news digest") ? "news" : "guide"); return fakeAi([])(s, p); };
+  await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: ai, fetchFn: fakeFetch, log: () => {} });
+  assert.equal(order[0], "news");
+});
+
+test("guide rewrites are capped per run", async () => {
+  const dir = setup();
+  await generate({ cfg: { ...cfg, maxGuidesPerRun: 3 }, contentDir: dir, today: "2026-10-04", complete: fakeAi([]), fetchFn: fakeFetch, log: () => {} });
+  assert.equal(fs.readdirSync(path.join(dir, "pages")).length, 3);
+});
+
+test("once the daily AI allowance is used up, no more AI calls are made this run", async () => {
+  const dir = setup();
+  let calls = 0;
+  /** @type {import("../../src/generate.mjs").Complete} */
+  const ai = async () => { calls++; throw new Error('Cloudflare AI 429: {"errors":[{"message":"you have used up your daily free allocation of 10,000 neurons","code":4006}]}'); };
+  /** @type {string[]} */
+  const logs = [];
+  await generate({ cfg: { ...cfg, translation: { maxPerRun: 5, newsLanguages: ["es"] } }, contentDir: dir, today: "2026-10-04", complete: ai, fetchFn: fakeFetch, log: (m) => logs.push(m) });
+  assert.equal(calls, 1);
+  assert.equal(logs.filter((l) => /allowance/i.test(l)).length, 1, "explained once");
 });

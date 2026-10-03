@@ -77,3 +77,7 @@
 ## ADR-017: Editorial brief and quality gates for AI writing
 **Decision:** a stricter brief (direct answer first, key takeaways, specific headings, a comparison table, concrete examples, steps and common mistakes where relevant, FAQ; an SEO title with the keyword; no Introduction/Overview/Conclusion headings or filler) and automatic gates in `src/lib/quality.mjs`. A weak guide is retried once with its problems listed, then cleaned; if it still lacks length, a table or an FAQ, it is not published. Digest titles must name real stories; a generic one is replaced by the top headline. `CONTENT_VERSION` (now 2) makes the run rewrite older guides once.
 **Reason:** the first guides read like textbooks and the first digest was titled "AI Agents in the News". Specific titles and practical structure get more clicks and rank better.
+
+## ADR-018: Spend the free daily AI allowance on the most important work first
+**Decision:** each run does today's digest first, then at most `maxGuidesPerRun` (3) guide rewrites, then up to `translation.maxPerRun` (8) translations, then pictures. The first "daily allowance used up" error (Cloudflare code 4006) stops all further AI calls for that run and is logged once.
+**Reason:** Cloudflare's free tier is about 10,000 neurons a day. Guides used to run first and could use the whole allowance, skipping the daily news; after the limit, every remaining item failed noisily. The full v2 guide rewrite now completes over about 4 days without ever missing a digest.

@@ -16,7 +16,8 @@
     { "slug": "tool-discovery-for-ai-agents", "keyword": "tool discovery for ai agents", "also": [], "angle": "How agents find and choose tools: function calling, MCP servers and registries, tool search, scaling to many tools." },
     { "slug": "moltbook-ai-agents", "keyword": "moltbook ai agents", "also": ["ai agents moltbook"], "angle": "Explainer on Moltbook, the social network built for AI agents: what it is, how agents post there, why it got attention, security concerns. Be careful to only state well-established facts and say when details are uncertain." }
   ],
-  "translation": { "maxPerRun": 10, "newsLanguages": ["es", "pt", "hi"] },
+  "maxGuidesPerRun": 3,
+  "translation": { "maxPerRun": 8, "newsLanguages": ["es", "pt", "hi"] },
   "news": {
     "hub": { "slug": "ai-agents-news", "keyword": "ai agents news", "also": ["ai agents news 2026", "ai agents updates", "ai agents agentic ai breakthroughs 2026", "ai agents agentic tools twitter trends 2026"] },
     "feeds": [

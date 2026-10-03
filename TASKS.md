@@ -44,6 +44,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 
 - [x] TASK-030 Better writing: editorial brief, quality gates with one retry, specific digest titles, rewrite of existing guides (content version 2)
 
+- [x] TASK-031 Fix: news first, guide rewrites capped (3/run), stop AI calls once the daily allowance is used up
+
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI
 - [ ] TASK-017 Lighthouse CI budget (SEO and accessibility ≥ 95)

@@ -52,6 +52,7 @@ export function validateConfig(cfg) {
       if (!topics.has(t?.topic)) errors.push(`news.topicPages[${i}].topic "${t?.topic}" has no matching feed`);
     });
   }
+  if (cfg.maxGuidesPerRun !== undefined && (!Number.isInteger(cfg.maxGuidesPerRun) || cfg.maxGuidesPerRun < 0)) errors.push("maxGuidesPerRun must be a whole number of 0 or more");
   if (cfg.translation !== undefined) {
     const tr = cfg.translation;
     if (!Number.isInteger(tr?.maxPerRun) || tr.maxPerRun < 0 || tr.maxPerRun > 100) errors.push("translation.maxPerRun must be an integer from 0 to 100");
