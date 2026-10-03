@@ -5,6 +5,7 @@ import path from "node:path";
 import { toFrontmatter, parseFrontmatter, parseRss, parseAiHeader, isStale, titleCase } from "./lib/content.mjs";
 import { planTranslations, sameLinks } from "./lib/translate.mjs";
 import { LANGUAGES, language } from "./lib/i18n.mjs";
+import { isGenericTitle, fallbackDigestTitle, guideIssues, cleanGuide, titleHasKeyword } from "./lib/quality.mjs";
 
 export const REFRESH_DAYS = 90;
 const MAX_IMAGE_FAILURES = 3;
@@ -16,15 +17,64 @@ const MAX_IMAGE_FAILURES = 3;
  */
 
 /** @param {any} cfg */
-const systemPrompt = (cfg) => `You write for ${cfg.site.name}, a site that explains AI agents to practitioners and business readers.
-Rules: accurate, specific, no hype, no filler intros. Never invent statistics, quotes, product names, prices or dates.
-If something is uncertain or fast-moving, say so. Output GitHub-flavoured Markdown only, no front matter, no H1.
-Start with a 2-3 sentence direct answer paragraph. Use H2/H3 headings, short paragraphs, lists and one table where useful.`;
-const FAQ_RULE = `\nEnd with an "## FAQ" section of 4-6 questions as "### Question" + short answer.`;
+const systemPrompt = (cfg) => `You are a senior editor at ${cfg.site.name}, writing for practitioners and business readers who want clear, useful answers about AI agents.
+Voice: plain English, confident, specific, no hype. Short paragraphs (2-4 sentences). Active voice. Speak to the reader as "you".
+Facts: never invent statistics, quotes, prices, dates, benchmark numbers or product features. Name only well-known real products and companies, and describe them in general terms. If something is uncertain or changing fast, say so.
+Format: GitHub-flavoured Markdown only. No front matter. No H1. Never write headings called "Introduction", "Overview" or "Conclusion". Never use filler such as "In today's fast-paced world", "In conclusion", "It is important to note".`;
+
+/** Raised when the writing instructions change, so existing guides are rewritten once. */
+export const CONTENT_VERSION = 2;
+
+/** @param {any} p @param {string} today @param {string} links */
+const guidePrompt = (p, today, links) => `Write an in-depth guide (1,500-2,200 words) that ranks for the Google search "${p.keyword}"${p.also.length ? ` and also answers: ${p.also.join(", ")}` : ""}.
+Angle: ${p.angle}
+Today is ${today}.
+
+Structure, in this order:
+1. A 2-3 sentence direct answer to "${p.keyword}" as the first paragraph (this is what Google may quote).
+2. "## Key takeaways": 4-5 short bullets.
+3. 5-8 H2 sections whose headings are specific and useful (for example "How an AI agent decides what to do next", not "Overview"). Use H3s inside where helpful.
+4. At least one Markdown comparison table with 3+ rows.
+5. Concrete examples: real scenarios with a role, a task and the result.
+6. Where it fits the topic: a numbered step-by-step section, and a "## Common mistakes" section.
+7. "## FAQ" with 4-6 real search questions as "### Question?" and 2-3 sentence answers.
+Link naturally to 2-4 of these related pages, using exactly these relative links:
+${links}
+
+Output format:
+Line 1: "TITLE: " + an SEO title of at most 60 characters that contains "${p.keyword}" and promises a clear benefit (no year in brackets, no clickbait).
+Line 2: "DESC: " + a meta description of at most 155 characters with the keyword and a reason to click.
+Then a blank line and the article.`;
 
 /** @param {string} file */
 function readMeta(file) {
   return fs.existsSync(file) ? parseFrontmatter(fs.readFileSync(file, "utf8"))?.meta ?? null : null;
+}
+
+/**
+ * Asks for a guide, retries once with the list of problems, cleans it, and returns null if it is still weak.
+ * @param {Complete} complete
+ * @param {string} system
+ * @param {string} prompt
+ * @param {(m: string) => void} log
+ * @param {string} slug
+ */
+async function writeGuide(complete, system, prompt, log, slug) {
+  /** @param {string} text */
+  const parse = (text) => parseAiHeader(text, ["TITLE", "DESC"]) ?? parseAiHeader(text, ["DESC"]);
+  let out = parse(await complete(system, prompt));
+  let issues = out ? guideIssues(out.body) : ["the first lines must be TITLE: and DESC:"];
+  if (issues.length) {
+    log(`page ${slug}: retrying (${issues.join("; ")})`);
+    out = parse(await complete(system, `${prompt}\n\nYour previous draft was rejected. Fix these problems:\n- ${issues.join("\n- ")}`));
+    issues = out ? guideIssues(out.body) : ["no TITLE/DESC lines"];
+  }
+  if (!out) return null;
+  const body = cleanGuide(out.body);
+  // Headings and filler are fixed by cleanGuide; length, table and FAQ cannot be fixed automatically.
+  const hard = guideIssues(body).filter((i) => !i.includes("filler") && !i.includes("H1"));
+  if (hard.length) { log(`page ${slug}: not published (${hard.join("; ")})`); return null; }
+  return { fields: out.fields, body };
 }
 
 /** @param {Options} o */
@@ -34,14 +84,14 @@ async function guides({ cfg, contentDir, today, complete, log = console.log }) {
   for (const p of cfg.pages) {
     const file = path.join(contentDir, "pages", `${p.slug}.md`);
     const meta = readMeta(file);
-    if (meta && !isStale(meta.updated, REFRESH_DAYS, Date.parse(today))) continue;
+    const current = meta && Number(meta.version ?? 1) >= CONTENT_VERSION;
+    if (current && !isStale(meta.updated, REFRESH_DAYS, Date.parse(today))) continue;
     try {
-      const out = parseAiHeader(await complete(systemPrompt(cfg) + FAQ_RULE, `Write a 1500-2200 word article targeting the search query "${p.keyword}"${p.also.length ? ` (also covering: ${p.also.join(", ")})` : ""}.
-Angle: ${p.angle}
-Today is ${today}. Naturally link to 2-4 of these related pages using exactly these relative links:\n${links}
-On the first line, output only a meta description (max 155 chars) prefixed with "DESC: ", then a blank line, then the article.`), ["DESC"]);
-      if (!out) { log(`page ${p.slug}: AI output had no DESC line, skipped`); continue; }
-      fs.writeFileSync(file, toFrontmatter({ title: `${titleCase(p.keyword)} (${today.slice(0, 4)} Guide)`, description: out.fields.DESC.slice(0, 160), keyword: p.keyword, updated: today }) + out.body + "\n");
+      const out = await writeGuide(complete, systemPrompt(cfg), guidePrompt(p, today, links), log, p.slug);
+      if (!out) continue;
+      const aiTitle = (out.fields.TITLE ?? "").trim();
+      const title = aiTitle && [...aiTitle].length <= 70 && titleHasKeyword(aiTitle, p.keyword) ? aiTitle : `${titleCase(p.keyword)}: A Practical Guide (${today.slice(0, 4)})`;
+      fs.writeFileSync(file, toFrontmatter({ title, description: out.fields.DESC.slice(0, 160), keyword: p.keyword, updated: today, version: CONTENT_VERSION }) + out.body + "\n");
       log(`page ${p.slug}: written`);
     } catch (e) {
       // Free tiers rate-limit; leave this page for the next run.
@@ -74,16 +124,27 @@ async function news({ cfg, contentDir, today, complete, fetchFn, log = console.l
   const items = [...fresh.values()];
   if (items.length < 3) return log("news: not enough new headlines today");
   const list = items.slice(0, 40).map((it, i) => `${i + 1}. [${[...it.topics].join(", ")}] ${it.title} — ${it.source} — ${it.date} — ${it.link}`).join("\n");
-  const parsed = parseAiHeader(await complete(systemPrompt(cfg), `Write today's (${today}) AI agents news digest using ONLY the headlines below. You only have headlines, not full articles, so do not claim details beyond what a headline says.
-Group into 3-6 themed H2 sections (e.g. product launches, enterprise adoption, research and breakthroughs, commerce/Shopify, safety and policy). For each story write 1-2 sentences and link the source as [Source name](link).
-Finish with "## What it means" (3-4 bullet takeaways, clearly labelled as analysis).
-First line: "TITLE: " + a specific headline for the digest (max 70 chars). Second line: "DESC: " + meta description (max 155 chars). Then a blank line and the digest.
+  const parsed = parseAiHeader(await complete(systemPrompt(cfg), `Write today's (${today}) AI agents news digest using ONLY the headlines below. You only have headlines, not full articles, so never claim details beyond what a headline says.
+
+Structure:
+1. A 2-sentence opening that names the day's biggest story.
+2. "## Top stories": the 3 most important stories, 2-3 sentences each, each ending with the source link as [Source name](link).
+3. 2-4 themed H2 sections (for example "## Enterprise adoption", "## Commerce and Shopify", "## Research and breakthroughs", "## Safety and policy") covering the other notable stories in 1-2 sentences each, with source links. Skip duplicates and minor items.
+4. "## What it means": 3-4 bullets of analysis for practitioners, clearly your interpretation.
+
+Output format:
+Line 1: "TITLE: " + a specific headline (at most 70 characters) that names the top 1-2 stories with companies or products, like a news site would. Never generic ("AI Agents in the News", "Daily AI Digest" are not allowed).
+Line 2: "DESC: " + a meta description (at most 155 characters) that mentions the top stories.
+Then a blank line and the digest.
 
 Headlines:\n${list}`), ["TITLE", "DESC"]);
   if (!parsed) return log("news: AI output had no TITLE/DESC lines, skipped");
+  // Generic titles get no clicks; fall back to the strongest real headline.
+  const aiTitle = parsed.fields.TITLE.trim();
+  const title = isGenericTitle(aiTitle) ? fallbackDigestTitle(items[0].title) : aiTitle.slice(0, 90);
   const topics = [...new Set(items.flatMap((i) => [...i.topics]))];
   for (const it of items) seen.add(it.title);
-  fs.writeFileSync(out, toFrontmatter({ title: parsed.fields.TITLE.slice(0, 90), description: parsed.fields.DESC.slice(0, 160), date: today, topics }) + parsed.body + "\n");
+  fs.writeFileSync(out, toFrontmatter({ title, description: parsed.fields.DESC.slice(0, 160), date: today, topics }) + cleanGuide(parsed.body) + "\n");
   // Only remember headlines once they are published, so a failed day can retry them.
   fs.writeFileSync(seenFile, JSON.stringify([...seen].slice(-3000)));
   log(`news: digest written from ${items.length} headlines`);

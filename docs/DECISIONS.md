@@ -73,3 +73,7 @@
 ## ADR-016: Advanced SEO layer
 **Decision:** sitemap with hreflang alternates and images, a Google News sitemap, IndexNow pings after each content deploy, real favicon/logo/manifest files, Organization/ItemList/AboutPage/rich Article structured data, preview meta (large image preview, image size/alt, article times), title/description length limits, an About page in every language, and related-guide links on news pages. Details in `docs/SEO.md`.
 **Reason:** the basics were in place; these add faster discovery (News sitemap, IndexNow), richer results (logo, lists, article data), trust signals (About page) and stronger internal linking, all at no cost.
+
+## ADR-017: Editorial brief and quality gates for AI writing
+**Decision:** a stricter brief (direct answer first, key takeaways, specific headings, a comparison table, concrete examples, steps and common mistakes where relevant, FAQ; an SEO title with the keyword; no Introduction/Overview/Conclusion headings or filler) and automatic gates in `src/lib/quality.mjs`. A weak guide is retried once with its problems listed, then cleaned; if it still lacks length, a table or an FAQ, it is not published. Digest titles must name real stories; a generic one is replaced by the top headline. `CONTENT_VERSION` (now 2) makes the run rewrite older guides once.
+**Reason:** the first guides read like textbooks and the first digest was titled "AI Agents in the News". Specific titles and practical structure get more clicks and rank better.

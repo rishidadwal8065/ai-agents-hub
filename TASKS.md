@@ -42,6 +42,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 
 - [x] TASK-029 Advanced SEO: hreflang/image sitemap, News sitemap, IndexNow, icons/manifest, rich structured data, About page, length limits, related guides
 
+- [x] TASK-030 Better writing: editorial brief, quality gates with one retry, specific digest titles, rewrite of existing guides (content version 2)
+
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI
 - [ ] TASK-017 Lighthouse CI budget (SEO and accessibility ≥ 95)

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { generate } from "../../src/generate.mjs";
+import { generate, CONTENT_VERSION } from "../../src/generate.mjs";
 import { parseFrontmatter } from "../../src/lib/content.mjs";
 
 const cfg = JSON.parse(fs.readFileSync(new URL("../../keywords.json", import.meta.url), "utf8"));
@@ -21,7 +21,7 @@ const fakeFetch = async () => new Response(RSS, { status: 200 });
 /** @param {string[]} calls @returns {import("../../src/generate.mjs").Complete} */
 const fakeAi = (calls) => async (_system, prompt) => {
   calls.push(prompt);
-  return prompt.includes("news digest") ? "TITLE: Agents everywhere\nDESC: Digest summary\n\n## Launches\n\nStory." : "DESC: Guide summary\n\n## Intro\n\nText.\n\n## FAQ\n\n### Q?\n\nA.";
+  return prompt.includes("news digest") ? "TITLE: Shopify tests checkout agents as OpenAI ships an SDK\nDESC: Digest summary\n\n## Launches\n\nStory." : `DESC: Guide summary\n\n${GOOD_BODY}`;
 };
 
 test("writes every guide and one digest, then is a no-op on the same day", async () => {
@@ -31,7 +31,7 @@ test("writes every guide and one digest, then is a no-op on the same day", async
   await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: fakeAi(calls), fetchFn: fakeFetch, log: () => {} });
   assert.equal(fs.readdirSync(path.join(dir, "pages")).length, cfg.pages.length);
   const digest = parseFrontmatter(fs.readFileSync(path.join(dir, "news/2026-10-04.md"), "utf8"));
-  assert.equal(digest?.meta.title, "Agents everywhere");
+  assert.equal(digest?.meta.title, "Shopify tests checkout agents as OpenAI ships an SDK");
   assert.deepEqual(digest?.meta.topics.sort(), cfg.news.feeds.map((/** @type {{ topic: string }} */ f) => f.topic).sort());
   const guide = parseFrontmatter(fs.readFileSync(path.join(dir, "pages/best-ai-agents.md"), "utf8"));
   assert.equal(guide?.meta.description, "Guide summary");
@@ -126,4 +126,60 @@ test("translation is off when the config has no translation section", async () =
   const dir = setup();
   await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: fakeTranslator, fetchFn: fakeFetch, log: () => {} });
   assert.ok(!fs.existsSync(path.join(dir, "i18n")));
+});
+
+// --- Content quality -------------------------------------------------------------------
+
+const GOOD_BODY = `Agents act on goals.\n\n## How they work\n${"word ".repeat(700)}\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n## FAQ\n\n### Q?\n\nA.`;
+
+test("guides get an SEO title from the AI when it contains the keyword, and a content version", async () => {
+  const dir = setup();
+  /** @type {import("../../src/generate.mjs").Complete} */
+  const ai = async (_s, p) => p.includes("news digest") ? "TITLE: Shopify tests checkout agents\nDESC: d\n\n## A\n\nB" : `TITLE: ${p.match(/Google search "([^"]+)"/)?.[1]} explained: a practical 2026 guide\nDESC: Guide summary\n\n${GOOD_BODY}`;
+  await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: ai, fetchFn: fakeFetch, log: () => {} });
+  const g = parseFrontmatter(fs.readFileSync(path.join(dir, "pages/best-ai-agents.md"), "utf8"));
+  assert.equal(g?.meta.title, "best ai agents explained: a practical 2026 guide");
+  assert.equal(g?.meta.version, CONTENT_VERSION);
+});
+
+test("guides written with an older content version are rewritten even if recent", async () => {
+  const dir = setup();
+  fs.writeFileSync(path.join(dir, "pages/best-ai-agents.md"), `---\ntitle: "Old"\ndescription: "Old"\nkeyword: "best ai agents"\nupdated: "2026-10-03"\n---\n\nOld body.\n`);
+  /** @type {string[]} */
+  const calls = [];
+  await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: fakeAi(calls), fetchFn: fakeFetch, log: () => {} });
+  assert.notEqual(parseFrontmatter(fs.readFileSync(path.join(dir, "pages/best-ai-agents.md"), "utf8"))?.meta.title, "Old");
+});
+
+test("a guide with quality issues is retried once with the issues listed", async () => {
+  const dir = setup();
+  /** @type {string[]} */
+  const prompts = [];
+  /** @type {import("../../src/generate.mjs").Complete} */
+  const ai = async (_s, p) => {
+    prompts.push(p);
+    if (p.includes("news digest")) return "TITLE: Shopify tests checkout agents\nDESC: d\n\n## A\n\nB";
+    return p.includes("Fix these problems") ? `DESC: Better\n\n${GOOD_BODY}` : "DESC: Weak\n\nToo short.";
+  };
+  await generate({ cfg: { ...cfg, pages: cfg.pages.slice(0, 1) }, contentDir: dir, today: "2026-10-04", complete: ai, fetchFn: fakeFetch, log: () => {} });
+  assert.ok(prompts.some((p) => p.includes("Fix these problems") && p.includes("words")));
+  const g = parseFrontmatter(fs.readFileSync(path.join(dir, `pages/${cfg.pages[0].slug}.md`), "utf8"));
+  assert.equal(g?.meta.description, "Better");
+});
+
+test("a guide still too weak after the retry is not published", async () => {
+  const dir = setup();
+  /** @type {import("../../src/generate.mjs").Complete} */
+  const ai = async (_s, p) => p.includes("news digest") ? "TITLE: Shopify tests checkout agents\nDESC: d\n\n## A\n\nB" : "DESC: Weak\n\nToo short.";
+  await generate({ cfg: { ...cfg, pages: cfg.pages.slice(0, 1) }, contentDir: dir, today: "2026-10-04", complete: ai, fetchFn: fakeFetch, log: () => {} });
+  assert.ok(!fs.existsSync(path.join(dir, `pages/${cfg.pages[0].slug}.md`)));
+});
+
+test("a generic digest title is replaced by the top headline", async () => {
+  const dir = setup();
+  /** @type {import("../../src/generate.mjs").Complete} */
+  const ai = async (_s, p) => p.includes("news digest") ? "TITLE: AI Agents in the News\nDESC: d\n\n## A\n\nB" : fakeAi([])(_s, p);
+  await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: ai, fetchFn: fakeFetch, log: () => {} });
+  const d = parseFrontmatter(fs.readFileSync(path.join(dir, "news/2026-10-04.md"), "utf8"));
+  assert.equal(d?.meta.title, "Headline 1");
 });
