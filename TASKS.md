@@ -27,8 +27,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 - [x] TASK-L1b Owner: create the Cloudflare Pages project `aiagentnewsfree`, API token, and add the 2 GitHub secrets
 - [x] TASK-L2 First manual workflow run; check the log for AI or model errors
 - [x] TASK-L3 Production QA: pages, pictures, sitemap, RSS, 404, security headers OK; http→https and www still open (TASK-L4)
-- [ ] TASK-L4 Attach aiagentnewsfree.com + www redirect + Always Use HTTPS in Cloudflare
-- [ ] TASK-L5 Google Search Console and Bing Webmaster Tools: verify, submit the sitemap
+- [x] TASK-L4 Domain on the ai-agents-hub Worker; www → root 301 redirect; Always Use HTTPS (verified 4 Oct 2026)
+- [x] TASK-L5 Google Search Console: sitemap.xml + news-sitemap.xml submitted (Google confirms it can fetch them); Bing via IndexNow
 
 - [x] TASK-023 Fix: GitHub Models retired; text on Cloudflare Workers AI, plus a Cloudflare settings check in CI
 

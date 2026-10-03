@@ -7,7 +7,7 @@ Code complete for v1 and verified locally (`npm run verify`: 121 tests pass, 99%
 
 ## Completed
 - Keyword plan (`keywords.json`), content pipeline, static build, daily workflow
-- Live at https://aiagentnewsfree.com (Cloudflare Worker `ai-agents-hub`, Git-connected; HTTPS and security headers verified)
+- Live at https://aiagentnewsfree.com (Cloudflare Worker `ai-agents-hub`, Git-connected; HTTPS, www→root 301 and security headers verified)
 - Free providers: Cloudflare Workers AI for text (Llama 3.3) and images (FLUX), SVG covers
 - Approved UI/UX design (screens in `docs/design/`)
 - Project docs, rules, tests, lint, typecheck, coverage gate in CI
@@ -17,7 +17,7 @@ Code complete for v1 and verified locally (`npm run verify`: 121 tests pass, 99%
 - Security hardening: escaping raw HTML, link-scheme allow-list, JPEG check, account-id validation
 
 ## Current task
-TASK-L4: owner turns on Always Use HTTPS and adds www; then TASK-L5 (Search Console).
+None: launch complete. The site runs itself (daily at 06:17 UTC).
 
 ## Known issues
 - GitHub Models was retired (30 Jul 2026); text switched to Cloudflare Workers AI.
@@ -25,4 +25,4 @@ TASK-L4: owner turns on Always Use HTTPS and adds www; then TASK-L5 (Search Cons
 - Browser end-to-end tests are not set up yet (TASKS.md, Phase 3).
 
 ## Next step
-Owner: Cloudflare SSL/TLS > Edge Certificates > Always Use HTTPS; add www.aiagentnewsfree.com to the Pages project; Google Search Console + sitemap.
+In ~1 week: review the rewritten guides and Search Console data; then Phase 3 (Playwright e2e, Lighthouse CI) and Phase 4 (new keywords from Search Console).
