@@ -32,3 +32,7 @@ test("wrangler.jsonc publishes the built site from the ai-agents-hub Worker", ()
   assert.equal(w.build.command, "npm run build");
   assert.match(w.compatibility_date, /^\d{4}-\d{2}-\d{2}$/);
 });
+
+test("content runs notify IndexNow after pushing", () => {
+  assert.ok(wf.indexOf("scripts/indexnow.mjs") > wf.indexOf("git push"), "IndexNow runs after the push");
+});

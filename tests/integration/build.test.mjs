@@ -225,3 +225,95 @@ test("pages have no inline event handlers or inline scripts besides JSON-LD", ()
     assert.equal(scripts.length, 0, p);
   }
 });
+
+// --- Advanced SEO ---------------------------------------------------------------------
+
+test("sitemap has hreflang alternates and images", () => {
+  const sm = read("sitemap.xml");
+  assert.match(sm, /xmlns:xhtml="http:\/\/www\.w3\.org\/1999\/xhtml"/);
+  assert.match(sm, /xmlns:image="http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1"/);
+  const entry = sm.split("<url>").find((u) => u.includes(`<loc>${SITE}/what-are-ai-agents/</loc>`)) ?? "";
+  assert.match(entry, new RegExp(`<xhtml:link rel="alternate" hreflang="es" href="${SITE}/es/what-are-ai-agents/"/>`));
+  assert.match(entry, /<xhtml:link rel="alternate" hreflang="x-default"/);
+  assert.match(entry, /<image:image><image:loc>https:\/\/[^<]+<\/image:loc><\/image:image>/);
+});
+
+test("news sitemap lists recent digests in Google News format", () => {
+  const ns = read("news-sitemap.xml");
+  assert.match(ns, /xmlns:news="http:\/\/www\.google\.com\/schemas\/sitemap-news\/0\.9"/);
+  assert.match(ns, new RegExp(`<loc>${SITE}/news/2026-10-04/</loc>`));
+  assert.match(ns, /<news:publication><news:name>AI Agents Hub<\/news:name><news:language>en<\/news:language><\/news:publication>/);
+  assert.match(ns, /<news:publication_date>2026-10-04<\/news:publication_date>/);
+  assert.match(ns, new RegExp(`<loc>${SITE}/es/news/2026-10-04/</loc>[^]*?<news:language>es</news:language>`));
+  assert.match(read("robots.txt"), new RegExp(`Sitemap: ${SITE}/news-sitemap.xml`));
+});
+
+test("real favicon, logo and web manifest files exist and are linked", () => {
+  for (const f of ["favicon.svg", "logo.svg", "site.webmanifest"]) assert.ok(fs.existsSync(path.join(OUT, f)), f);
+  const h = read("index.html");
+  assert.match(h, /<link rel="icon" href="\/hub\/favicon\.svg" type="image\/svg\+xml">/);
+  assert.match(h, /<link rel="manifest" href="\/hub\/site\.webmanifest">/);
+  assert.doesNotMatch(h, /rel="icon" href="data:/);
+  const m = JSON.parse(read("site.webmanifest"));
+  assert.equal(m.name, "AI Agents Hub");
+});
+
+test("home has Organization (with logo) and ItemList structured data", () => {
+  const types = [...read("index.html").matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+  const org = types.find((j) => j["@type"] === "Organization");
+  assert.ok(org, "Organization");
+  assert.match(org.logo.url, /\/logo\.svg$/);
+  assert.match(org.url, /^https:\/\//);
+  const list = types.find((j) => j["@type"] === "ItemList");
+  assert.ok(list && list.itemListElement.length >= 1, "ItemList");
+  assert.match(list.itemListElement[0].url, /^https:\/\//);
+});
+
+test("articles have rich Article data: author, publisher logo, word count, language", () => {
+  const ld = [...read("what-are-ai-agents/index.html").matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])).find((j) => j["@type"] === "Article");
+  assert.ok(ld);
+  assert.equal(ld.author["@type"], "Organization");
+  assert.match(ld.author.url, /\/about\/$/);
+  assert.match(ld.publisher.logo.url, /\/logo\.svg$/);
+  assert.ok(ld.wordCount > 0);
+  assert.equal(ld.inLanguage, "en");
+  assert.match(ld.datePublished, /^\d{4}-\d{2}-\d{2}/);
+});
+
+test("meta tags for previews: large image preview, image size/alt, article times, twitter", () => {
+  const h = read("what-are-ai-agents/index.html");
+  assert.match(h, /<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">/);
+  assert.match(h, /<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="[^"]+">/);
+  assert.match(h, /<meta property="article:modified_time" content="2026-10-01">/);
+  assert.match(h, /<meta name="twitter:title" content="[^"]+"><meta name="twitter:description" content="[^"]+">/);
+  assert.match(h, /<meta property="og:locale:alternate" content="es_ES">/);
+});
+
+test("titles stay under 70 and descriptions under 165 characters", () => {
+  for (const p of pages()) {
+    const h = read(p);
+    const title = (h.match(/<title>([^<]*)<\/title>/) || [])[1] ?? "";
+    const desc = (h.match(/<meta name="description" content="([^"]*)"/) || [])[1] ?? "";
+    const decode = (/** @type {string} */ s) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&lt;/g, "<");
+    assert.ok([...decode(title)].length <= 70, `${p} title ${title.length}: ${title}`);
+    assert.ok([...decode(desc)].length <= 165, `${p} description ${desc.length}`);
+  }
+});
+
+test("about page exists in every language, is linked from the footer, and is an AboutPage", () => {
+  assert.match(read("about/index.html"), /"@type":"AboutPage"/);
+  assert.ok(fs.existsSync(path.join(OUT, "es/about/index.html")));
+  assert.match(read("index.html"), /<footer[\s\S]*href="\/hub\/about\/"/);
+});
+
+test("news pages link to related guides (internal linking)", () => {
+  const n = read("news/2026-10-04/index.html");
+  const related = n.slice(n.indexOf('class="related-guides"'));
+  assert.match(related, /href="\/hub\/(what-are-ai-agents|ai-agents-examples)\/"/);
+});
+
+test("IndexNow key file is published", () => {
+  const files = fs.readdirSync(OUT).filter((f) => /^[a-f0-9]{32}\.txt$/.test(f));
+  assert.equal(files.length, 1);
+  assert.equal(read(files[0]).trim(), files[0].replace(".txt", ""));
+});

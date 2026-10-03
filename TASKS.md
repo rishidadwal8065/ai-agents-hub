@@ -40,6 +40,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 
 - [x] TASK-028 Fix: domain served an old copy; deploy only via the Git-connected Worker (`wrangler.jsonc`)
 
+- [x] TASK-029 Advanced SEO: hreflang/image sitemap, News sitemap, IndexNow, icons/manifest, rich structured data, About page, length limits, related guides
+
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI
 - [ ] TASK-017 Lighthouse CI budget (SEO and accessibility ≥ 95)

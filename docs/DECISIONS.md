@@ -69,3 +69,7 @@
 **Decision:** the Worker `ai-agents-hub` (Cloudflare Workers Builds, connected to this repo) owns aiagentnewsfree.com and deploys on every push using `wrangler.jsonc` (build `npm run build`, static assets from `./dist`, `404-page` handling). The GitHub workflow only writes content and commits it; it no longer deploys.
 **Reason:** two deploy paths (a Pages project from Actions and the Worker from Git) caused the domain to serve an outdated copy. One path, owned by Cloudflare, is simpler and needs no deploy permissions in our token. Content commits no longer carry a skip-ci marker, so Cloudflare builds them; `GITHUB_TOKEN` pushes never start new workflow runs, so there is no loop.
 **Replaces:** ADR-011's Pages deploy.
+
+## ADR-016: Advanced SEO layer
+**Decision:** sitemap with hreflang alternates and images, a Google News sitemap, IndexNow pings after each content deploy, real favicon/logo/manifest files, Organization/ItemList/AboutPage/rich Article structured data, preview meta (large image preview, image size/alt, article times), title/description length limits, an About page in every language, and related-guide links on news pages. Details in `docs/SEO.md`.
+**Reason:** the basics were in place; these add faster discovery (News sitemap, IndexNow), richer results (logo, lists, article data), trust signals (About page) and stronger internal linking, all at no cost.

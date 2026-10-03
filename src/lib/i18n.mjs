@@ -46,6 +46,8 @@ export const STRINGS = {
     home_title: "What AI Agents Are, Examples, How to Build Them & Daily News",
     home_desc: "Clear guides to AI agents: what they are, real examples, the best tools, how to build them, plus daily AI agents news.",
     tagline: "Plain-English guides and daily news on AI agents", footer_site: "Site", back_to_top: "Back to top",
+    about: "About", about_title: "About AI Agents Hub",
+    about_text: "AI Agents Hub explains AI agents in plain language and tracks the news every day. Guides are written with AI from a fixed editorial brief and refreshed every 90 days. Daily digests summarise only that day's headlines and always link to the original sources. Pages in other languages are machine-translated from English. We do not sell products or take payment for coverage.",
   },
   es: {
     nav_home: "Inicio", nav_basics: "Conceptos", nav_examples: "Ejemplos", nav_build: "Crear", nav_business: "Empresas", nav_news: "Noticias",
@@ -69,6 +71,8 @@ export const STRINGS = {
     home_title: "Qué son los agentes de IA, ejemplos, cómo crearlos y noticias diarias",
     home_desc: "Guías claras sobre agentes de IA: qué son, ejemplos reales, las mejores herramientas y cómo crearlos, además de noticias diarias.",
     tagline: "Guías sencillas y noticias diarias sobre agentes de IA", footer_site: "Sitio", back_to_top: "Volver arriba",
+    about: "Acerca de", about_title: "Acerca de AI Agents Hub",
+    about_text: "AI Agents Hub explica los agentes de IA con un lenguaje sencillo y sigue las noticias cada día. Las guías se escriben con IA a partir de unas pautas editoriales fijas y se renuevan cada 90 días. Los resúmenes diarios solo recogen los titulares del día y siempre enlazan a las fuentes originales. Las páginas en otros idiomas se traducen automáticamente del inglés. No vendemos productos ni cobramos por la cobertura.",
   },
   pt: {
     nav_home: "Início", nav_basics: "Conceitos", nav_examples: "Exemplos", nav_build: "Criar", nav_business: "Empresas", nav_news: "Notícias",
@@ -92,6 +96,8 @@ export const STRINGS = {
     home_title: "O que são agentes de IA, exemplos, como criá-los e notícias diárias",
     home_desc: "Guias claros sobre agentes de IA: o que são, exemplos reais, as melhores ferramentas e como criá-los, além de notícias diárias.",
     tagline: "Guias simples e notícias diárias sobre agentes de IA", footer_site: "Site", back_to_top: "Voltar ao topo",
+    about: "Sobre", about_title: "Sobre o AI Agents Hub",
+    about_text: "O AI Agents Hub explica os agentes de IA em linguagem simples e acompanha as notícias todos os dias. Os guias são escritos com IA a partir de diretrizes editoriais fixas e atualizados a cada 90 dias. Os resumos diários tratam apenas das manchetes do dia e sempre trazem links para as fontes originais. As páginas em outros idiomas são traduzidas automaticamente do inglês. Não vendemos produtos nem recebemos pagamento por cobertura.",
   },
   hi: {
     nav_home: "होम", nav_basics: "मूल बातें", nav_examples: "उदाहरण", nav_build: "बनाएँ", nav_business: "व्यवसाय", nav_news: "समाचार",
@@ -115,6 +121,8 @@ export const STRINGS = {
     home_title: "AI एजेंट क्या हैं, उदाहरण, उन्हें कैसे बनाएँ और दैनिक समाचार",
     home_desc: "AI एजेंट पर आसान गाइड: वे क्या हैं, असली उदाहरण, बेहतरीन टूल और उन्हें कैसे बनाएँ, साथ में रोज़ की खबरें।",
     tagline: "AI एजेंट पर आसान गाइड और दैनिक समाचार", footer_site: "साइट", back_to_top: "ऊपर जाएँ",
+    about: "परिचय", about_title: "AI Agents Hub के बारे में",
+    about_text: "AI Agents Hub आसान भाषा में AI एजेंट समझाता है और हर दिन खबरों पर नज़र रखता है। गाइड तय संपादकीय दिशानिर्देशों के आधार पर AI से लिखे जाते हैं और हर 90 दिन में अपडेट होते हैं। दैनिक सारांश में सिर्फ़ उस दिन की सुर्खियाँ होती हैं और हमेशा मूल स्रोतों के लिंक दिए जाते हैं। दूसरी भाषाओं के पेज अंग्रेज़ी से अपने आप अनुवादित होते हैं। हम कोई उत्पाद नहीं बेचते और कवरेज के लिए पैसे नहीं लेते।",
   },
   id: {
     nav_home: "Beranda", nav_basics: "Dasar", nav_examples: "Contoh", nav_build: "Membuat", nav_business: "Bisnis", nav_news: "Berita",
@@ -138,6 +146,8 @@ export const STRINGS = {
     home_title: "Apa Itu Agen AI, Contoh, Cara Membuatnya & Berita Harian",
     home_desc: "Panduan jelas tentang agen AI: apa itu, contoh nyata, alat terbaik, dan cara membuatnya, plus berita agen AI setiap hari.",
     tagline: "Panduan sederhana dan berita harian tentang agen AI", footer_site: "Situs", back_to_top: "Kembali ke atas",
+    about: "Tentang", about_title: "Tentang AI Agents Hub",
+    about_text: "AI Agents Hub menjelaskan agen AI dengan bahasa sederhana dan memantau beritanya setiap hari. Panduan ditulis dengan AI berdasarkan pedoman redaksi yang tetap dan diperbarui setiap 90 hari. Ringkasan harian hanya merangkum judul berita hari itu dan selalu menautkan sumber aslinya. Halaman dalam bahasa lain diterjemahkan otomatis dari bahasa Inggris. Kami tidak menjual produk atau menerima bayaran untuk liputan.",
   },
   fr: {
     nav_home: "Accueil", nav_basics: "Les bases", nav_examples: "Exemples", nav_build: "Créer", nav_business: "Entreprises", nav_news: "Actualités",
@@ -161,6 +171,8 @@ export const STRINGS = {
     home_title: "Agents IA : définition, exemples, comment les créer et actualités quotidiennes",
     home_desc: "Des guides clairs sur les agents IA : ce qu'ils sont, des exemples réels, les meilleurs outils et comment les créer, plus l'actualité quotidienne.",
     tagline: "Guides simples et actualités quotidiennes sur les agents IA", footer_site: "Site", back_to_top: "Haut de page",
+    about: "À propos", about_title: "À propos d'AI Agents Hub",
+    about_text: "AI Agents Hub explique les agents IA en langage simple et suit l'actualité chaque jour. Les guides sont rédigés avec l'IA à partir d'une ligne éditoriale fixe et mis à jour tous les 90 jours. Les résumés quotidiens ne reprennent que les titres du jour et renvoient toujours aux sources d'origine. Les pages dans d'autres langues sont traduites automatiquement de l'anglais. Nous ne vendons aucun produit et ne sommes pas payés pour nos contenus.",
   },
   de: {
     nav_home: "Start", nav_basics: "Grundlagen", nav_examples: "Beispiele", nav_build: "Entwickeln", nav_business: "Unternehmen", nav_news: "News",
@@ -184,6 +196,8 @@ export const STRINGS = {
     home_title: "Was KI-Agenten sind, Beispiele, wie man sie baut & tägliche News",
     home_desc: "Klare Guides zu KI-Agenten: was sie sind, echte Beispiele, die besten Tools und wie man sie baut, dazu tägliche News.",
     tagline: "Einfache Guides und tägliche News zu KI-Agenten", footer_site: "Website", back_to_top: "Nach oben",
+    about: "Über uns", about_title: "Über AI Agents Hub",
+    about_text: "AI Agents Hub erklärt KI-Agenten in einfacher Sprache und verfolgt täglich die News. Die Guides werden mit KI nach festen redaktionellen Vorgaben geschrieben und alle 90 Tage aktualisiert. Die täglichen Zusammenfassungen fassen nur die Schlagzeilen des Tages zusammen und verlinken immer die Originalquellen. Seiten in anderen Sprachen werden automatisch aus dem Englischen übersetzt. Wir verkaufen keine Produkte und nehmen kein Geld für Berichterstattung.",
   },
   ja: {
     nav_home: "ホーム", nav_basics: "基本", nav_examples: "事例", nav_build: "作り方", nav_business: "ビジネス", nav_news: "ニュース",
@@ -207,6 +221,8 @@ export const STRINGS = {
     home_title: "AIエージェントとは？事例・作り方・毎日のニュース",
     home_desc: "AIエージェントのわかりやすいガイド：仕組み、実例、おすすめツール、作り方、そして毎日のニュース。",
     tagline: "AIエージェントのやさしいガイドと毎日のニュース", footer_site: "サイト", back_to_top: "ページの先頭へ",
+    about: "概要", about_title: "AI Agents Hubについて",
+    about_text: "AI Agents Hubは、AIエージェントをわかりやすく解説し、毎日ニュースを追いかけています。ガイドは決められた編集方針に沿ってAIで作成し、90日ごとに更新します。毎日のまとめはその日の見出しだけを要約し、必ず元の情報源へリンクします。英語以外のページは英語から自動翻訳しています。製品の販売や、掲載の対価の受け取りは行っていません。",
   },
   ar: {
     nav_home: "الرئيسية", nav_basics: "الأساسيات", nav_examples: "أمثلة", nav_build: "البناء", nav_business: "الأعمال", nav_news: "الأخبار",
@@ -230,6 +246,8 @@ export const STRINGS = {
     home_title: "ما هم وكلاء الذكاء الاصطناعي، أمثلة، طريقة بنائهم وأخبار يومية",
     home_desc: "أدلة واضحة عن وكلاء الذكاء الاصطناعي: ما هم، وأمثلة حقيقية، وأفضل الأدوات، وطريقة بنائهم، مع أخبار يومية.",
     tagline: "أدلة بسيطة وأخبار يومية عن وكلاء الذكاء الاصطناعي", footer_site: "الموقع", back_to_top: "العودة للأعلى",
+    about: "من نحن", about_title: "عن AI Agents Hub",
+    about_text: "يشرح AI Agents Hub وكلاء الذكاء الاصطناعي بلغة بسيطة ويتابع أخبارهم يوميًا. تُكتب الأدلة بالذكاء الاصطناعي وفق توجيهات تحريرية ثابتة وتُحدَّث كل 90 يومًا. تلخّص الملخصات اليومية عناوين ذلك اليوم فقط وتربط دائمًا بالمصادر الأصلية. تُترجم الصفحات بلغات أخرى تلقائيًا من الإنجليزية. لا نبيع منتجات ولا نتقاضى أجرًا مقابل التغطية.",
   },
   ru: {
     nav_home: "Главная", nav_basics: "Основы", nav_examples: "Примеры", nav_build: "Создание", nav_business: "Бизнес", nav_news: "Новости",
@@ -253,6 +271,8 @@ export const STRINGS = {
     home_title: "Что такое ИИ-агенты, примеры, как их создать и ежедневные новости",
     home_desc: "Понятные руководства об ИИ-агентах: что это, реальные примеры, лучшие инструменты и как их создать, а также ежедневные новости.",
     tagline: "Простые руководства и ежедневные новости об ИИ-агентах", footer_site: "Сайт", back_to_top: "Наверх",
+    about: "О сайте", about_title: "Об AI Agents Hub",
+    about_text: "AI Agents Hub простым языком рассказывает об ИИ-агентах и каждый день следит за новостями. Руководства пишутся с помощью ИИ по единым редакционным правилам и обновляются каждые 90 дней. Ежедневные обзоры охватывают только заголовки дня и всегда ссылаются на первоисточники. Страницы на других языках автоматически переведены с английского. Мы ничего не продаём и не берём деньги за публикации.",
   },
   tr: {
     nav_home: "Ana sayfa", nav_basics: "Temeller", nav_examples: "Örnekler", nav_build: "Geliştir", nav_business: "İş dünyası", nav_news: "Haberler",
@@ -276,6 +296,8 @@ export const STRINGS = {
     home_title: "Yapay Zekâ Ajanları Nedir, Örnekler, Nasıl Geliştirilir ve Günlük Haberler",
     home_desc: "Yapay zekâ ajanları için anlaşılır rehberler: ne oldukları, gerçek örnekler, en iyi araçlar ve nasıl geliştirildikleri, ayrıca günlük haberler.",
     tagline: "Yapay zekâ ajanları hakkında sade rehberler ve günlük haberler", footer_site: "Site", back_to_top: "Başa dön",
+    about: "Hakkında", about_title: "AI Agents Hub hakkında",
+    about_text: "AI Agents Hub yapay zekâ ajanlarını sade bir dille anlatır ve haberleri her gün takip eder. Rehberler sabit bir yayın ilkesine göre yapay zekâ ile yazılır ve 90 günde bir güncellenir. Günlük özetler yalnızca o günün başlıklarını özetler ve her zaman orijinal kaynaklara bağlantı verir. Diğer dillerdeki sayfalar İngilizceden otomatik olarak çevrilir. Ürün satmıyor ve haber karşılığında ödeme almıyoruz.",
   },
   vi: {
     nav_home: "Trang chủ", nav_basics: "Cơ bản", nav_examples: "Ví dụ", nav_build: "Xây dựng", nav_business: "Doanh nghiệp", nav_news: "Tin tức",
@@ -299,6 +321,8 @@ export const STRINGS = {
     home_title: "AI Agent là gì, ví dụ, cách xây dựng và tin tức hằng ngày",
     home_desc: "Hướng dẫn rõ ràng về AI agent: chúng là gì, ví dụ thực tế, công cụ tốt nhất và cách xây dựng, kèm tin tức hằng ngày.",
     tagline: "Hướng dẫn dễ hiểu và tin tức hằng ngày về AI agent", footer_site: "Trang web", back_to_top: "Lên đầu trang",
+    about: "Giới thiệu", about_title: "Giới thiệu về AI Agents Hub",
+    about_text: "AI Agents Hub giải thích AI agent bằng ngôn ngữ dễ hiểu và theo dõi tin tức mỗi ngày. Các hướng dẫn được viết bằng AI theo nguyên tắc biên tập cố định và cập nhật mỗi 90 ngày. Bản tin hằng ngày chỉ tóm tắt các tiêu đề trong ngày và luôn dẫn liên kết tới nguồn gốc. Các trang bằng ngôn ngữ khác được dịch tự động từ tiếng Anh. Chúng tôi không bán sản phẩm và không nhận tiền để đưa tin.",
   },
   it: {
     nav_home: "Home", nav_basics: "Le basi", nav_examples: "Esempi", nav_build: "Creare", nav_business: "Aziende", nav_news: "Notizie",
@@ -322,6 +346,8 @@ export const STRINGS = {
     home_title: "Cosa sono gli agenti IA, esempi, come crearli e notizie quotidiane",
     home_desc: "Guide chiare sugli agenti IA: cosa sono, esempi reali, i migliori strumenti e come crearli, più le notizie di ogni giorno.",
     tagline: "Guide semplici e notizie quotidiane sugli agenti IA", footer_site: "Sito", back_to_top: "Torna su",
+    about: "Chi siamo", about_title: "Chi è AI Agents Hub",
+    about_text: "AI Agents Hub spiega gli agenti IA in modo semplice e segue le notizie ogni giorno. Le guide sono scritte con l'IA secondo linee editoriali fisse e aggiornate ogni 90 giorni. I riepiloghi quotidiani riassumono solo i titoli del giorno e rimandano sempre alle fonti originali. Le pagine in altre lingue sono tradotte automaticamente dall'inglese. Non vendiamo prodotti e non riceviamo compensi per la copertura.",
   },
   ko: {
     nav_home: "홈", nav_basics: "기초", nav_examples: "사례", nav_build: "만들기", nav_business: "비즈니스", nav_news: "뉴스",
@@ -345,6 +371,8 @@ export const STRINGS = {
     home_title: "AI 에이전트란? 사례, 만드는 법, 그리고 매일의 뉴스",
     home_desc: "AI 에이전트에 대한 명확한 가이드: 정의, 실제 사례, 추천 도구, 만드는 방법과 매일의 뉴스.",
     tagline: "AI 에이전트에 관한 쉬운 가이드와 매일의 뉴스", footer_site: "사이트", back_to_top: "맨 위로",
+    about: "소개", about_title: "AI Agents Hub 소개",
+    about_text: "AI Agents Hub는 AI 에이전트를 쉬운 말로 설명하고 매일 뉴스를 따라갑니다. 가이드는 정해진 편집 원칙에 따라 AI로 작성되며 90일마다 업데이트됩니다. 일일 요약은 그날의 헤드라인만 정리하고 항상 원본 출처를 연결합니다. 다른 언어 페이지는 영어에서 자동 번역됩니다. 저희는 제품을 판매하거나 보도 대가를 받지 않습니다.",
   },
   zh: {
     nav_home: "首页", nav_basics: "入门", nav_examples: "示例", nav_build: "构建", nav_business: "商业", nav_news: "新闻",
@@ -368,6 +396,8 @@ export const STRINGS = {
     home_title: "什么是 AI 智能体：示例、构建方法与每日新闻",
     home_desc: "清晰易懂的 AI 智能体指南：概念、真实示例、最佳工具和构建方法，另有每日新闻。",
     tagline: "通俗易懂的 AI 智能体指南与每日新闻", footer_site: "网站", back_to_top: "回到顶部",
+    about: "关于", about_title: "关于 AI Agents Hub",
+    about_text: "AI Agents Hub 用通俗易懂的语言讲解 AI 智能体，并每天追踪相关新闻。指南由 AI 按照固定的编辑规范撰写，每 90 天更新一次。每日摘要只总结当天的新闻标题，并始终附上原始来源链接。其他语言的页面由英文自动翻译。我们不销售任何产品，也不收取报道费用。",
   },
   pl: {
     nav_home: "Start", nav_basics: "Podstawy", nav_examples: "Przykłady", nav_build: "Tworzenie", nav_business: "Biznes", nav_news: "Wiadomości",
@@ -391,6 +421,8 @@ export const STRINGS = {
     home_title: "Czym są agenci AI, przykłady, jak ich zbudować i codzienne wiadomości",
     home_desc: "Jasne poradniki o agentach AI: czym są, prawdziwe przykłady, najlepsze narzędzia i jak ich zbudować, plus codzienne wiadomości.",
     tagline: "Proste poradniki i codzienne wiadomości o agentach AI", footer_site: "Serwis", back_to_top: "Do góry",
+    about: "O nas", about_title: "O AI Agents Hub",
+    about_text: "AI Agents Hub prostym językiem wyjaśnia, czym są agenci AI, i codziennie śledzi wiadomości. Poradniki są pisane przez AI według stałych zasad redakcyjnych i odświeżane co 90 dni. Codzienne podsumowania obejmują wyłącznie nagłówki danego dnia i zawsze odsyłają do oryginalnych źródeł. Strony w innych językach są automatycznie tłumaczone z angielskiego. Nie sprzedajemy produktów i nie przyjmujemy pieniędzy za publikacje.",
   },
 };
 

@@ -63,3 +63,7 @@ jobs:
           # Pushes made with GITHUB_TOKEN do not start new workflow runs, so the commit needs no skip-ci marker.
           # Cloudflare's Git integration sees this push and deploys the Worker (see wrangler.jsonc).
           git diff --cached --quiet || (git commit -m "content: auto update $(date -u +%F)" && git push)
+      # Once Cloudflare has deployed the push above, tell Bing, Yandex and others about new URLs.
+      - name: Notify search engines (IndexNow)
+        if: github.event_name != 'push'
+        run: node scripts/indexnow.mjs

@@ -3,7 +3,7 @@
 _Last updated: 4 Oct 2026_
 
 ## Current status
-Code complete for v1 and verified locally (`npm run verify`: 90 tests pass, 99% line coverage on `src/`). **Live since 3 Oct 2026** at https://aiagentnewsfree.com (first run: 10 guides, 1 digest from 75 headlines, 13 AI pictures).
+Code complete for v1 and verified locally (`npm run verify`: 105 tests pass, 99% line coverage on `src/`). **Live since 3 Oct 2026** at https://aiagentnewsfree.com (first run: 10 guides, 1 digest from 75 headlines, 13 AI pictures).
 
 ## Completed
 - Keyword plan (`keywords.json`), content pipeline, static build, daily workflow
@@ -12,6 +12,7 @@ Code complete for v1 and verified locally (`npm run verify`: 90 tests pass, 99% 
 - Approved UI/UX design (screens in `docs/design/`)
 - Project docs, rules, tests, lint, typecheck, coverage gate in CI
 - 16 languages (translations fill in ~10/day, newest digest in es/pt/hi first), light/dark switch, search, upgraded UI (4 Oct 2026)
+- Advanced SEO (see docs/SEO.md): News sitemap, IndexNow, rich structured data, About page
 - Security hardening: escaping raw HTML, link-scheme allow-list, JPEG check, account-id validation
 
 ## Current task

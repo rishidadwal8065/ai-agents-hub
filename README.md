@@ -9,6 +9,7 @@ A website that writes, illustrates, builds and publishes itself every day, for $
 | Look and feel | [docs/DESIGN.md](docs/DESIGN.md) · screens in [docs/design/](docs/design/) |
 | Rules for contributors and AI agents | [RULES.md](RULES.md) |
 | What's next | [TASKS.md](TASKS.md) · current state in [docs/MEMORY.md](docs/MEMORY.md) |
+| SEO | [docs/SEO.md](docs/SEO.md) |
 | Testing · Security · Decisions | [TEST_PLAN](docs/TEST_PLAN.md) · [SECURITY](docs/SECURITY.md) · [DECISIONS](docs/DECISIONS.md) |
 
 ## Commands
