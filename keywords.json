@@ -1,0 +1,30 @@
+{
+  "site": {
+    "name": "AI Agents Hub",
+    "url": "https://YOUR-USER.github.io/ai-agents-hub",
+    "tagline": "Plain-English guides and daily news on AI agents"
+  },
+  "pages": [
+    { "slug": "what-are-ai-agents", "keyword": "what are ai agents", "also": ["ai agents", "ai agents explained"], "angle": "Definitive beginner explainer: definition, how agents differ from chatbots, the perceive-plan-act-observe loop, tools, memory, real limits." },
+    { "slug": "ai-agents-examples", "keyword": "ai agents examples", "also": [], "angle": "Concrete examples grouped by domain (coding, customer support, research, sales, ops, personal), each with what it does and what it still cannot do." },
+    { "slug": "best-ai-agents", "keyword": "best ai agents", "also": [], "angle": "Category-based buyer guide (coding, browser, research, customer service, no-code builders) with selection criteria rather than invented rankings." },
+    { "slug": "ai-agents-for-business", "keyword": "ai agents for business", "also": [], "angle": "Practical guide for small and mid-size businesses: high-ROI use cases, rollout steps, costs, risks, how to measure results." },
+    { "slug": "enterprise-ai-agents", "keyword": "enterprise ai agents", "also": [], "angle": "Enterprise adoption: governance, security, identity and permissions, audit logs, evaluation, build vs buy." },
+    { "slug": "how-to-build-ai-agents", "keyword": "how to build ai agents", "also": [], "angle": "Step-by-step technical tutorial: tool-use loop, a minimal code example in Python, adding memory, evaluation, guardrails, deployment." },
+    { "slug": "autonomous-ai-agents", "keyword": "autonomous ai agents", "also": [], "angle": "What autonomy really means, levels of autonomy, human-in-the-loop design, failure modes, safety." },
+    { "slug": "private-ai-agents", "keyword": "private ai agents", "also": [], "angle": "Running agents privately: local models, self-hosting, data residency, what leaves your machine, trade-offs." },
+    { "slug": "tool-discovery-for-ai-agents", "keyword": "tool discovery for ai agents", "also": [], "angle": "How agents find and choose tools: function calling, MCP servers and registries, tool search, scaling to many tools." },
+    { "slug": "moltbook-ai-agents", "keyword": "moltbook ai agents", "also": ["ai agents moltbook"], "angle": "Explainer on Moltbook, the social network built for AI agents: what it is, how agents post there, why it got attention, security concerns. Be careful to only state well-established facts and say when details are uncertain." }
+  ],
+  "news": {
+    "hub": { "slug": "ai-agents-news", "keyword": "ai agents news", "also": ["ai agents news 2026", "ai agents updates", "ai agents agentic ai breakthroughs 2026", "ai agents agentic tools twitter trends 2026"] },
+    "feeds": [
+      { "topic": "general", "url": "https://news.google.com/rss/search?q=%22ai+agents%22+when:2d&hl=en-US&gl=US&ceid=US:en" },
+      { "topic": "shopify", "url": "https://news.google.com/rss/search?q=shopify+%22ai+agents%22+when:7d&hl=en-US&gl=US&ceid=US:en" },
+      { "topic": "agentic", "url": "https://news.google.com/rss/search?q=%22agentic+ai%22+when:2d&hl=en-US&gl=US&ceid=US:en" }
+    ],
+    "topicPages": [
+      { "slug": "shopify-ai-agents-news", "keyword": "shopify ai agents news", "topic": "shopify" }
+    ]
+  }
+}
