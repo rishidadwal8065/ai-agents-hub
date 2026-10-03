@@ -3,7 +3,7 @@
 _Last updated: 4 Oct 2026_
 
 ## Current status
-Code complete for v1 and verified locally (`npm run verify`: 50 tests pass, 99% line coverage on `src/`). **Not launched yet.**
+Code complete for v1 and verified locally (`npm run verify`: 50 tests pass, 99% line coverage on `src/`). **Live since 3 Oct 2026** at https://aiagentnewsfree.com (first run: 10 guides, 1 digest from 75 headlines, 13 AI pictures).
 
 ## Completed
 - Keyword plan (`keywords.json`), content pipeline, static build, daily workflow
@@ -14,7 +14,7 @@ Code complete for v1 and verified locally (`npm run verify`: 50 tests pass, 99% 
 - Security hardening: escaping raw HTML, link-scheme allow-list, JPEG check, account-id validation
 
 ## Current task
-TASK-L1: launch on Cloudflare Pages at aiagentnewsfree.com. Waiting for the owner to finish `gh auth login`, and to create the Cloudflare Pages project, API token and 2 GitHub secrets.
+TASK-L4: owner turns on Always Use HTTPS and adds www; then TASK-L5 (Search Console).
 
 ## Known issues
 - GitHub Models was retired (30 Jul 2026); text switched to Cloudflare Workers AI.
@@ -22,4 +22,4 @@ TASK-L1: launch on Cloudflare Pages at aiagentnewsfree.com. Waiting for the owne
 - Browser end-to-end tests are not set up yet (TASKS.md, Phase 3).
 
 ## Next step
-Create the public repo `ai-agents-hub`, push, run the workflow (deploys with wrangler), attach the custom domain, then run production QA (TEST_PLAN.md).
+Owner: Cloudflare SSL/TLS > Edge Certificates > Always Use HTTPS; add www.aiagentnewsfree.com to the Pages project; Google Search Console + sitemap.

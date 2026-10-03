@@ -23,10 +23,10 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 
 ## Phase L: Launch 🔜
 - [x] TASK-L0 Hosting switched to Cloudflare Pages + aiagentnewsfree.com (`_headers`, wrangler deploy)
-- [ ] TASK-L1 Create the public GitHub repo and push (owner: finish `gh auth login`)
-- [ ] TASK-L1b Owner: create the Cloudflare Pages project `aiagentnewsfree`, API token, and add the 2 GitHub secrets
-- [ ] TASK-L2 First manual workflow run; check the log for AI or model errors
-- [ ] TASK-L3 Production QA (docs/TEST_PLAN.md)
+- [x] TASK-L1 Create the public GitHub repo and push (owner: finish `gh auth login`)
+- [x] TASK-L1b Owner: create the Cloudflare Pages project `aiagentnewsfree`, API token, and add the 2 GitHub secrets
+- [x] TASK-L2 First manual workflow run; check the log for AI or model errors
+- [x] TASK-L3 Production QA: pages, pictures, sitemap, RSS, 404, security headers OK; http→https and www still open (TASK-L4)
 - [ ] TASK-L4 Attach aiagentnewsfree.com + www redirect + Always Use HTTPS in Cloudflare
 - [ ] TASK-L5 Google Search Console and Bing Webmaster Tools: verify, submit the sitemap
 
