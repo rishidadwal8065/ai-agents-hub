@@ -22,24 +22,22 @@ npm run verify       # lint → typecheck → tests with coverage → build (CI 
 Preview locally: `npm run build`, then serve `dist/` (for example `python -m http.server -d dist`).
 
 ## Live site
-**https://aiagentnewsfree.com**, hosted on Cloudflare Pages and deployed by GitHub Actions.
+**https://aiagentnewsfree.com**, served by the Cloudflare Worker **`ai-agents-hub`**, which is connected to this GitHub repo.
 
-## Launch (one time)
-1. Push to a **public** GitHub repo named `ai-agents-hub`.
-2. Cloudflare dashboard → **Workers & Pages → Create → Pages → Direct Upload**, project name **`aiagentnewsfree`** (one-time; the workflow uploads after that).
-3. Cloudflare → My Profile → **API Tokens → Create Custom Token** with permissions:
-   - Account → **Cloudflare Pages → Edit**
-   - Account → **Workers AI → Read** (for the free AI pictures)
-4. GitHub repo → Settings → Secrets → Actions: add **`CF_ACCOUNT_ID`** (Cloudflare dashboard → Account ID) and **`CF_API_TOKEN`**.
-5. GitHub → Actions → "Generate, build and deploy" → **Run workflow**. After that it runs daily at 06:17 UTC.
-6. Cloudflare → the `aiagentnewsfree` project → **Custom domains → Set up a domain** → `aiagentnewsfree.com` (and `www.aiagentnewsfree.com`). The domain is already on Cloudflare DNS, so the records are created automatically.
-7. Cloudflare → Rules → **Redirect Rules**: redirect `www.aiagentnewsfree.com/*` to `https://aiagentnewsfree.com/${1}` (301).
-8. Google Search Console: add `aiagentnewsfree.com` (DNS verification via Cloudflare) and submit `https://aiagentnewsfree.com/sitemap.xml`.
+## How it runs
+1. Every day at 06:17 UTC, GitHub Actions checks the code, writes new guides, news, translations and pictures, and pushes them.
+2. Every push to `main` makes Cloudflare build the site and deploy it (`wrangler.jsonc`).
 
-The same Cloudflare token runs the free AI for text (Llama 3.3 70B) and pictures (FLUX), so no other AI key is needed. If a run fails, open the **Check Cloudflare settings** step in the Actions log: it says which setting is wrong.
+## Setup (already done)
+- GitHub secrets `CF_ACCOUNT_ID` and `CF_API_TOKEN` (token permission: **Account → Workers AI → Read**) for the free AI.
+- Cloudflare → Workers & Pages → **ai-agents-hub** → Settings → Build: connected to `rishidadwal8065/ai-agents-hub`, branch `main`, deploy command `npx wrangler deploy`.
+- Custom domain `aiagentnewsfree.com` on that Worker (add `www.aiagentnewsfree.com` there too).
+- Google Search Console: sitemap `https://aiagentnewsfree.com/sitemap.xml`.
+
+If a content run fails, open the **Check Cloudflare settings** step in the Actions log: it says which setting is wrong.
 
 ## Cost
-$0 to run: GitHub Actions (public repo), Cloudflare Pages and Workers AI free tiers. The only cost is the domain renewal.
+$0 to run: GitHub Actions (public repo), Cloudflare Workers (static assets) and Workers AI free tiers. The only cost is the domain renewal.
 
 ## Add a keyword
 Add an entry to `pages` in `keywords.json`, then run `npm test` (it validates the file). The next daily run writes the page.

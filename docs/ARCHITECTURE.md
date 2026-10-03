@@ -1,7 +1,7 @@
 # Architecture
 
 ## Overview
-A static site generator with a daily content pipeline. There is no server and no database: content is Markdown files in the repo, and the output is plain HTML on Cloudflare Pages at https://aiagentnewsfree.com.
+A static site generator with a daily content pipeline. There is no server and no database: content is Markdown files in the repo, and the output is plain HTML served by the Cloudflare Worker `ai-agents-hub` (static assets) at https://aiagentnewsfree.com.
 
 ```
 GitHub Actions (daily 06:17 UTC, or manual)
@@ -13,13 +13,16 @@ GitHub Actions (daily 06:17 UTC, or manual)
   │     ├─ Google News RSS        headlines for the digest
   │     └─ writes content/pages/*.md, content/news/*.md, content/images/*.jpg
   │
-  ├─ git commit content/     (so every published word is in history)
+  ├─ git commit + push content/   (so every published word is in history)
   │
   ├─ translations            ≤10/run into content/i18n/<lang>/ (src/lib/translate.mjs plans them)
   │
   ├─ scripts/build.mjs       → src/site/build.mjs: content/ → dist/ in 16 languages (HTML, hreflang, sitemap, RSS, covers)
   │
-  └─ wrangler pages deploy dist/ → Cloudflare Pages (project "aiagentnewsfree")
+  └─ (end of GitHub job)
+
+Cloudflare Workers Builds (on every push to main)
+  └─ npx wrangler deploy → wrangler.jsonc: npm run build → publish ./dist → Worker ai-agents-hub → aiagentnewsfree.com
 ```
 
 ## Stack
@@ -30,7 +33,7 @@ GitHub Actions (daily 06:17 UTC, or manual)
 | Markdown | `marked` |
 | Tests | `node:test` (built into Node), with coverage thresholds |
 | Lint | ESLint 9 (`@eslint/js` recommended) |
-| Hosting | Cloudflare Pages (free), custom domain aiagentnewsfree.com, `_headers` for security and caching |
+| Hosting | Cloudflare Worker with static assets (free), Git-connected; custom domain aiagentnewsfree.com; `_headers` for security and caching |
 | CI/CD | GitHub Actions |
 | Text AI | Cloudflare Workers AI, Llama 3.3 70B (free tier); Claude if `ANTHROPIC_API_KEY` is set |
 | Image AI | Cloudflare Workers AI FLUX schnell (free tier) |

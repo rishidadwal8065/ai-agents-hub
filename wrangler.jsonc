@@ -1,0 +1,12 @@
+// Cloudflare Worker "ai-agents-hub" (connected to this GitHub repo) serves aiagentnewsfree.com.
+// On every push Cloudflare runs `npx wrangler deploy`, which builds the site and publishes ./dist.
+{
+  "name": "ai-agents-hub",
+  "compatibility_date": "2026-10-01",
+  "build": { "command": "npm run build" },
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

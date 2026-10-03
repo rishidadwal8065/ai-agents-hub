@@ -38,6 +38,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 - [x] TASK-026 Light/dark switch that remembers the choice
 - [x] TASK-027 UI upgrade: header actions, hero glow and stats, search page, reading progress, richer footer
 
+- [x] TASK-028 Fix: domain served an old copy; deploy only via the Git-connected Worker (`wrangler.jsonc`)
+
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI
 - [ ] TASK-017 Lighthouse CI budget (SEO and accessibility ≥ 95)

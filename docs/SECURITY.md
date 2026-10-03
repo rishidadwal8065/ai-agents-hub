@@ -5,8 +5,8 @@ The site is static: no logins, no user input, no database, no server. The main r
 ## Secrets
 - Secrets live only in GitHub Actions secrets: `ANTHROPIC_API_KEY` (optional), `CF_ACCOUNT_ID`, `CF_API_TOKEN`.
 - Never commit `.env`. `.gitignore` covers it; `.env.example` lists the names only.
-- AI secrets go only to the "Write new content" step. The Cloudflare token also goes to the deploy step (wrangler). The build step gets no secrets.
-- The Cloudflare token is a custom token with only **Cloudflare Pages: Edit** and **Workers AI: Read** on this account. Nothing else (no DNS or zone edit).
+- Secrets go only to the settings check and the "Write new content" step. The build step gets no secrets.
+- The Cloudflare token only needs **Workers AI: Read** (deploys are done by Cloudflare's own Git integration, not by our token). Nothing else (no DNS or zone edit).
 - Error messages from providers are trimmed to 300 characters and never include request headers.
 
 ## Untrusted input (AI output, RSS feeds)

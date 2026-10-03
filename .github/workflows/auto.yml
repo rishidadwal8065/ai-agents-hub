@@ -1,4 +1,4 @@
-name: Generate, build and deploy
+name: Generate content (Cloudflare deploys on push)
 on:
   schedule:
     - cron: "17 6 * * *" # daily 06:17 UTC
@@ -41,9 +41,7 @@ jobs:
           id="$(echo -n "$CF_ACCOUNT_ID" | tr -d '[:space:]')"
           if [[ ! "$id" =~ ^[0-9a-fA-F]{32}$ ]]; then echo "::error::CF_ACCOUNT_ID is not a 32-character hex id (length ${#id}). Copy it from the dashboard URL: dash.cloudflare.com/<ACCOUNT_ID>/home"; fi
           verify() { curl -s "$1" -H "Authorization: Bearer $(echo -n "$CF_API_TOKEN" | tr -d '[:space:]')" | grep -q '"status":"active"'; }
-          if verify "https://api.cloudflare.com/client/v4/user/tokens/verify" || verify "https://api.cloudflare.com/client/v4/accounts/$id/tokens/verify"; then echo "CF_API_TOKEN is active"; else echo "::error::CF_API_TOKEN is not valid or not active. Create a Custom Token with Account > Cloudflare Pages > Edit and Account > Workers AI > Read"; fi
-          code=$(curl -s -o /dev/null -w '%{http_code}' "https://api.cloudflare.com/client/v4/accounts/$id/pages/projects/aiagentnewsfree" -H "Authorization: Bearer $(echo -n "$CF_API_TOKEN" | tr -d '[:space:]')")
-          if [ "$code" = "200" ]; then echo "Pages project aiagentnewsfree found"; else echo "::error::Cannot read Pages project 'aiagentnewsfree' (HTTP $code): check the project name, the account id and the token's 'Cloudflare Pages: Edit' permission"; fi
+          if verify "https://api.cloudflare.com/client/v4/user/tokens/verify" || verify "https://api.cloudflare.com/client/v4/accounts/$id/tokens/verify"; then echo "CF_API_TOKEN is active"; else echo "::error::CF_API_TOKEN is not valid or not active. Create a Custom Token with Account > Workers AI > Read"; fi
       - name: Write new content
         if: github.event_name != 'push'
         env:
@@ -62,13 +60,6 @@ jobs:
           git config user.name "content-bot"
           git config user.email "content-bot@users.noreply.github.com"
           git add content
-          git diff --cached --quiet || (git commit -m "content: auto update $(date -u +%F) [skip ci]" && git push)
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          wranglerVersion: "4"
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          # Creates the Pages project on the first run if it does not exist yet.
-          preCommands: npx wrangler pages project list | grep -qw aiagentnewsfree || npx wrangler pages project create aiagentnewsfree --production-branch=main
-          command: pages deploy dist --project-name=aiagentnewsfree --branch=main --commit-dirty=true
+          # Pushes made with GITHUB_TOKEN do not start new workflow runs, so the commit needs no skip-ci marker.
+          # Cloudflare's Git integration sees this push and deploys the Worker (see wrangler.jsonc).
+          git diff --cached --quiet || (git commit -m "content: auto update $(date -u +%F)" && git push)

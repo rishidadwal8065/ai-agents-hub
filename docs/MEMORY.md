@@ -3,11 +3,11 @@
 _Last updated: 4 Oct 2026_
 
 ## Current status
-Code complete for v1 and verified locally (`npm run verify`: 87 tests pass, 99% line coverage on `src/`). **Live since 3 Oct 2026** at https://aiagentnewsfree.com (first run: 10 guides, 1 digest from 75 headlines, 13 AI pictures).
+Code complete for v1 and verified locally (`npm run verify`: 90 tests pass, 99% line coverage on `src/`). **Live since 3 Oct 2026** at https://aiagentnewsfree.com (first run: 10 guides, 1 digest from 75 headlines, 13 AI pictures).
 
 ## Completed
 - Keyword plan (`keywords.json`), content pipeline, static build, daily workflow
-- Live at https://aiagentnewsfree.com (Cloudflare Pages, HTTPS and security headers verified)
+- Live at https://aiagentnewsfree.com (Cloudflare Worker `ai-agents-hub`, Git-connected; HTTPS and security headers verified)
 - Free providers: Cloudflare Workers AI for text (Llama 3.3) and images (FLUX), SVG covers
 - Approved UI/UX design (screens in `docs/design/`)
 - Project docs, rules, tests, lint, typecheck, coverage gate in CI

@@ -64,3 +64,8 @@
 ## ADR-014: A small same-origin script for the theme switch and search
 **Decision:** `public/site.js` (served as `/assets/site.js`, loaded in `<head>`) applies the saved theme before paint, toggles light/dark, closes the language menu and filters the search page. CSP changes from `script-src 'none'` to `script-src 'self'`; there are still no inline scripts or event handlers (tested).
 **Reason:** a remembered theme choice and live search need JavaScript. Without JS the site still works: the theme follows the system, the language menu is a native `<details>`, and the search page lists everything.
+
+## ADR-015: Deploy through the Cloudflare Worker's Git integration
+**Decision:** the Worker `ai-agents-hub` (Cloudflare Workers Builds, connected to this repo) owns aiagentnewsfree.com and deploys on every push using `wrangler.jsonc` (build `npm run build`, static assets from `./dist`, `404-page` handling). The GitHub workflow only writes content and commits it; it no longer deploys.
+**Reason:** two deploy paths (a Pages project from Actions and the Worker from Git) caused the domain to serve an outdated copy. One path, owned by Cloudflare, is simpler and needs no deploy permissions in our token. Content commits no longer carry a skip-ci marker, so Cloudflare builds them; `GITHUB_TOKEN` pushes never start new workflow runs, so there is no loop.
+**Replaces:** ADR-011's Pages deploy.
