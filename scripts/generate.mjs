@@ -1,4 +1,4 @@
-// Writes new content with the Claude API. Safe to run every day:
+// Writes new content with an AI model (free GitHub Models by default). Safe to run every day:
 // - evergreen pages are written once, then refreshed when older than REFRESH_DAYS
 // - one news digest per day, built only from that day's RSS headlines
 import fs from "node:fs";
@@ -6,25 +6,37 @@ import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, "keywords.json"), "utf8"));
-const KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5-5";
+// Free by default: GitHub Models, using the GITHUB_TOKEN every Actions run already has.
+// Set ANTHROPIC_API_KEY instead to use Claude (paid).
+const ANTHROPIC = process.env.ANTHROPIC_API_KEY;
+const GH = process.env.GITHUB_TOKEN;
+const MODEL = process.env.AI_MODEL || (ANTHROPIC ? "claude-sonnet-5-5" : "openai/gpt-4.1-mini");
 const REFRESH_DAYS = 90;
 const today = new Date().toISOString().slice(0, 10);
 
-if (!KEY) {
-  console.log("ANTHROPIC_API_KEY not set - skipping generation, building existing content only.");
+if (!ANTHROPIC && !GH) {
+  console.log("No GITHUB_TOKEN or ANTHROPIC_API_KEY - skipping generation, building existing content only.");
   process.exit(0);
 }
 
 async function claude(system, prompt) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  if (ANTHROPIC) {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": ANTHROPIC, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 8000, system, messages: [{ role: "user", content: prompt }] }),
+    });
+    if (!res.ok) throw new Error(`Claude API ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    return data.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+  }
+  const res = await fetch("https://models.github.ai/inference/chat/completions", {
     method: "POST",
-    headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 8000, system, messages: [{ role: "user", content: prompt }] }),
+    headers: { authorization: `Bearer ${GH}`, "content-type": "application/json" },
+    body: JSON.stringify({ model: MODEL, max_tokens: 4000, messages: [{ role: "system", content: system }, { role: "user", content: prompt }] }),
   });
-  if (!res.ok) throw new Error(`Claude API ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  return data.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+  if (!res.ok) throw new Error(`GitHub Models ${res.status}: ${await res.text()}`);
+  return (await res.json()).choices[0].message.content.trim();
 }
 
 const SYSTEM = `You write for ${cfg.site.name}, a site that explains AI agents to practitioners and business readers.
@@ -101,5 +113,6 @@ Headlines:\n${list}`);
   fs.writeFileSync(seenFile, JSON.stringify([...seen].slice(-3000)));
 }
 
-await evergreen();
-await news();
+// Free tier has daily request limits, so a failed page is retried on the next run instead of failing the deploy.
+try { await evergreen(); } catch (e) { console.warn(`pages: ${e.message}`); }
+try { await news(); } catch (e) { console.warn(`news: ${e.message}`); }

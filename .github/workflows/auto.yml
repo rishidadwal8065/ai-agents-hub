@@ -9,6 +9,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  models: read
 concurrency: { group: site, cancel-in-progress: false }
 jobs:
   run:
@@ -22,7 +23,8 @@ jobs:
       - name: Write new content
         if: github.event_name != 'push'
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # optional, paid
         run: npm run generate
       - name: Commit content
         if: github.event_name != 'push'
