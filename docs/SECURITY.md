@@ -1,0 +1,32 @@
+# Security Requirements
+
+The site is static: no logins, no user input, no database, no server. The main risks are leaked secrets, untrusted AI or RSS text ending up in pages, and a compromised CI pipeline.
+
+## Secrets
+- Secrets live only in GitHub Actions secrets: `ANTHROPIC_API_KEY` (optional), `CF_ACCOUNT_ID`, `CF_API_TOKEN`. `GITHUB_TOKEN` is provided by Actions.
+- Never commit `.env`. `.gitignore` covers it; `.env.example` lists the names only.
+- Secrets are passed only to the "Write new content" step, never to build or deploy.
+- Use a Cloudflare token scoped to **Workers AI only** (the "Workers AI" template).
+- Error messages from providers are trimmed to 300 characters and never include request headers.
+
+## Untrusted input (AI output, RSS feeds)
+- Treat AI output and RSS text as untrusted.
+- RSS: only http(s) links are kept; tags are stripped.
+- AI output must pass `parseAiHeader` (required labels plus a non-empty body) or it is discarded.
+- Titles and descriptions are HTML-escaped (`esc`) wherever they are inserted into templates.
+- JSON-LD is serialised with `<` escaped as `<`, so content can't close the `<script>` tag.
+- Images must be real JPEGs (magic bytes checked) before they are saved.
+- `CF_ACCOUNT_ID` must be a 32-character hex string before it is put in a URL.
+- Raw HTML inside AI-written Markdown (`<script>`, `<iframe>`, event handlers) is escaped and shown as text, never run.
+- Markdown links are limited to http(s), mailto, `/` and `#`; `javascript:` and `data:` links are dropped. External links get `rel="nofollow noopener"`.
+- Both rules have regression tests in `tests/integration/build.test.mjs`.
+
+## CI/CD
+- Workflow permissions are minimal: `contents: write` (commit content), `pages: write`, `id-token: write`, `models: read`.
+- Deploy only runs after `npm run verify` passes.
+- Dependencies are locked (`package-lock.json`, `npm ci`). Few dependencies: `marked` at runtime; dev tools only otherwise.
+- The content bot commits with `[skip ci]` to avoid loops.
+
+## Content integrity
+- News digests may only use the day's headlines and must link sources; prompts forbid invented figures.
+- Every page carries an AI disclosure.
