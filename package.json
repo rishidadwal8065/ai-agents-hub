@@ -1,19 +1,33 @@
 {
   "name": "ai-agents-hub",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Self-updating AI agents keyword site",
   "scripts": {
     "generate": "node scripts/generate.mjs",
     "build": "node scripts/build.mjs",
-    "daily": "npm run generate && npm run build"
+    "daily": "npm run generate && npm run build",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-lines=85 --test-coverage-branches=70 --test-coverage-include=src/** \"tests/**/*.test.mjs\"",
+    "verify": "npm run lint && npm run typecheck && npm run test:coverage && npm run build"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "dependencies": {
     "marked": "^14.1.4"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "^9.39.5",
+    "globals": "^15.15.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }
