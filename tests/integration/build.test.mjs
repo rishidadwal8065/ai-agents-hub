@@ -108,3 +108,9 @@ test("javascript: links are dropped and external links are nofollow", () => {
   assert.doesNotMatch(h, /href="javascript:/i);
   assert.match(h, /<a href="https:\/\/example.com\/ok" rel="nofollow noopener" target="_blank">good<\/a>/);
 });
+
+test("Cloudflare Pages _headers sets security headers and long caching for images", () => {
+  const h = read("_headers");
+  for (const header of ["X-Content-Type-Options: nosniff", "Referrer-Policy: strict-origin-when-cross-origin", "X-Frame-Options: DENY", "Content-Security-Policy:"]) assert.ok(h.includes(header), header);
+  assert.match(h, /\/images\/\*\n\s+Cache-Control: public, max-age=31536000, immutable/);
+});

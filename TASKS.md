@@ -22,10 +22,12 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 - [x] TASK-015 Security: escape raw HTML in Markdown, allow-list link schemes, JSON-LD escaping
 
 ## Phase L: Launch 🔜
-- [ ] TASK-L1 Create the public GitHub repo, push, enable Pages (owner: finish `gh auth login`)
+- [x] TASK-L0 Hosting switched to Cloudflare Pages + aiagentnewsfree.com (`_headers`, wrangler deploy)
+- [ ] TASK-L1 Create the public GitHub repo and push (owner: finish `gh auth login`)
+- [ ] TASK-L1b Owner: create the Cloudflare Pages project `aiagentnewsfree`, API token, and add the 2 GitHub secrets
 - [ ] TASK-L2 First manual workflow run; check the log for AI or model errors
 - [ ] TASK-L3 Production QA (docs/TEST_PLAN.md)
-- [ ] TASK-L4 Optional: add `CF_ACCOUNT_ID` / `CF_API_TOKEN` for AI pictures
+- [ ] TASK-L4 Attach aiagentnewsfree.com + www redirect + Always Use HTTPS in Cloudflare
 - [ ] TASK-L5 Google Search Console and Bing Webmaster Tools: verify, submit the sitemap
 
 ## Phase 3: Hardening
@@ -36,5 +38,4 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 ## Phase 4: Growth (after 4–6 weeks of Search Console data)
 - [ ] TASK-019 Add keywords that show impressions but have no page
 - [ ] TASK-020 Owner hand-edits the 4 Easy-keyword pages
-- [ ] TASK-021 Custom domain (~$10/yr)
 - [ ] TASK-022 Cloudflare Web Analytics (free, no cookies)

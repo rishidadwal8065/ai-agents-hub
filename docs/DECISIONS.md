@@ -1,7 +1,7 @@
 # Architecture Decisions
 
-## ADR-001: Static site on GitHub Pages, not Next.js + Supabase + Vercel
-**Decision:** a small Node static site generator, deployed to GitHub Pages by GitHub Actions.
+## ADR-001: Static site, not Next.js + Supabase + Vercel
+**Decision:** a small Node static site generator, built by GitHub Actions (hosting: see ADR-011).
 **Reason:** the product has no users, logins or database, only content. Static HTML is the fastest option for SEO, costs $0, and can't be hacked through a server. The guide's recommended stack (Next.js, Supabase, Vercel) solves problems this product doesn't have.
 **Revisit if:** we add accounts, comments or a newsletter with sign-ups.
 
@@ -47,3 +47,8 @@
 | typescript (dev) | Apache-2.0 | Type checking of JSDoc |
 | eslint, @eslint/js, globals (dev) | MIT | Linting |
 | @types/node (dev) | MIT | Node types for the type checker |
+
+## ADR-011: Cloudflare Pages on aiagentnewsfree.com
+**Decision:** deploy `dist/` to Cloudflare Pages with `cloudflare/wrangler-action` (Direct Upload). The domain aiagentnewsfree.com is already on Cloudflare DNS. GitHub Actions still runs the daily content job.
+**Reason:** owner choice. Free, global CDN, custom domain with automatic HTTPS, `_headers` support for security headers, and the same account powers the free AI pictures. One token (Pages Edit + Workers AI) covers both.
+**Replaces:** GitHub Pages hosting.

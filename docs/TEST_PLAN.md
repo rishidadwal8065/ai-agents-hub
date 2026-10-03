@@ -32,10 +32,11 @@ Coverage thresholds (on `src/`): lines ≥ 85%, branches ≥ 70%.
 - [ ] Share a page link in a chat app: the preview shows the picture and title
 
 ## Production QA (after the first deploy)
-- [ ] The live URL loads; assets load under the `/<repo>/` base path
+- [ ] https://aiagentnewsfree.com loads; www redirects to the bare domain; http redirects to https
 - [ ] A direct URL to a guide works; an unknown URL shows the 404 page
 - [ ] `/sitemap.xml`, `/robots.txt` and `/feed.xml` are reachable
 - [ ] The Actions run log shows guides and a digest written (or a clear reason why not)
+- [ ] Response headers include the CSP and `nosniff` (`curl -I https://aiagentnewsfree.com`)
 
 ## Not yet automated
 - Browser end-to-end tests (Playwright) at the three widths. See TASKS.md, Phase 3.

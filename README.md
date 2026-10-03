@@ -21,23 +21,25 @@ npm run verify       # lint → typecheck → tests with coverage → build (CI 
 ```
 Preview locally: `npm run build`, then serve `dist/` (for example `python -m http.server -d dist`).
 
+## Live site
+**https://aiagentnewsfree.com**, hosted on Cloudflare Pages and deployed by GitHub Actions.
+
 ## Launch (one time)
 1. Push to a **public** GitHub repo named `ai-agents-hub`.
-2. Settings → Pages → Source: **GitHub Actions**.
-3. Actions → "Generate, build and deploy" → **Run workflow**. After that it runs daily at 06:17 UTC.
-4. Google Search Console: verify the site and submit `/sitemap.xml`.
+2. Cloudflare dashboard → **Workers & Pages → Create → Pages → Direct Upload**, project name **`aiagentnewsfree`** (one-time; the workflow uploads after that).
+3. Cloudflare → My Profile → **API Tokens → Create Custom Token** with permissions:
+   - Account → **Cloudflare Pages → Edit**
+   - Account → **Workers AI → Read** (for the free AI pictures)
+4. GitHub repo → Settings → Secrets → Actions: add **`CF_ACCOUNT_ID`** (Cloudflare dashboard → Account ID) and **`CF_API_TOKEN`**.
+5. GitHub → Actions → "Generate, build and deploy" → **Run workflow**. After that it runs daily at 06:17 UTC.
+6. Cloudflare → the `aiagentnewsfree` project → **Custom domains → Set up a domain** → `aiagentnewsfree.com` (and `www.aiagentnewsfree.com`). The domain is already on Cloudflare DNS, so the records are created automatically.
+7. Cloudflare → Rules → **Redirect Rules**: redirect `www.aiagentnewsfree.com/*` to `https://aiagentnewsfree.com/${1}` (301).
+8. Google Search Console: add `aiagentnewsfree.com` (DNS verification via Cloudflare) and submit `https://aiagentnewsfree.com/sitemap.xml`.
 
-No secrets are needed: text uses GitHub Models through the built-in `GITHUB_TOKEN`.
-
-### Optional: watermark-free AI pictures (free)
-1. Create a free account at dash.cloudflare.com and copy the **Account ID**.
-2. My Profile → API Tokens → Create Token → template **"Workers AI"** → copy the token.
-3. Repo → Settings → Secrets → Actions: add `CF_ACCOUNT_ID` and `CF_API_TOKEN`.
-
-Without them, every page gets a generated cover (also with no watermark).
+Text uses GitHub Models through the built-in `GITHUB_TOKEN`, so no AI key is needed.
 
 ## Cost
-$0: GitHub Actions and Pages (public repo), GitHub Models free tier, Cloudflare Workers AI free tier. A custom domain (~$10/yr) is optional.
+$0 to run: GitHub Actions (public repo), GitHub Models free tier, Cloudflare Pages and Workers AI free tiers. The only cost is the domain renewal.
 
 ## Add a keyword
 Add an entry to `pages` in `keywords.json`, then run `npm test` (it validates the file). The next daily run writes the page.

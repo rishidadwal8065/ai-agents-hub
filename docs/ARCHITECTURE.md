@@ -1,7 +1,7 @@
 # Architecture
 
 ## Overview
-A static site generator with a daily content pipeline. There is no server and no database: content is Markdown files in the repo, and the output is plain HTML on GitHub Pages.
+A static site generator with a daily content pipeline. There is no server and no database: content is Markdown files in the repo, and the output is plain HTML on Cloudflare Pages at https://aiagentnewsfree.com.
 
 ```
 GitHub Actions (daily 06:17 UTC, or manual)
@@ -17,7 +17,7 @@ GitHub Actions (daily 06:17 UTC, or manual)
   │
   ├─ scripts/build.mjs       content/ → dist/ (HTML, sitemap, RSS, covers)
   │
-  └─ deploy dist/ to GitHub Pages
+  └─ wrangler pages deploy dist/ → Cloudflare Pages (project "aiagentnewsfree")
 ```
 
 ## Stack
@@ -28,12 +28,12 @@ GitHub Actions (daily 06:17 UTC, or manual)
 | Markdown | `marked` |
 | Tests | `node:test` (built into Node), with coverage thresholds |
 | Lint | ESLint 9 (`@eslint/js` recommended) |
-| Hosting | GitHub Pages |
+| Hosting | Cloudflare Pages (free), custom domain aiagentnewsfree.com, `_headers` for security and caching |
 | CI/CD | GitHub Actions |
 | Text AI | GitHub Models (free) by default; Claude if `ANTHROPIC_API_KEY` is set |
 | Image AI | Cloudflare Workers AI FLUX schnell (free tier), optional |
 
-Why not Next.js, Supabase or Vercel: see DECISIONS.md, ADR-001.
+Why not Next.js, Supabase or Vercel: see DECISIONS.md, ADR-001. Why Cloudflare: ADR-011.
 
 ## Folder structure
 ```
@@ -61,7 +61,7 @@ keywords.json         the keyword plan and news feeds (the main thing to edit)
 - A failure in one guide, feed or image must never stop the run or the deploy.
 - Content is only written when the AI output passes validation (`parseAiHeader`).
 - The build fails on an invalid `keywords.json` or front matter instead of publishing a broken site.
-- Internal links in templates start with `/`; the build adds the base path for GitHub Pages project sites.
+- Internal links in templates start with `/`; the build adds a base path if `SITE_URL` has one (the custom domain has none).
 - Menus only link to pages that exist.
 
 ## Environment

@@ -26,10 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
       models: read
-    environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
+    environment: { name: production, url: "https://aiagentnewsfree.com" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,12 +42,10 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }} # optional, free: watermark-free AI pictures
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: npm run generate
-      - id: pages
-        uses: actions/configure-pages@v5
       # Build before committing: new content that breaks the build is never published or saved.
       - run: npm run build
         env:
-          SITE_URL: ${{ vars.SITE_URL || steps.pages.outputs.base_url }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://aiagentnewsfree.com' }}
       - name: Commit content
         if: github.event_name != 'push'
         run: |
@@ -57,7 +53,9 @@ jobs:
           git config user.email "content-bot@users.noreply.github.com"
           git add content
           git diff --cached --quiet || (git commit -m "content: auto update $(date -u +%F) [skip ci]" && git push)
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: dist }
-      - id: deploy
-        uses: actions/deploy-pages@v4
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=aiagentnewsfree --branch=main --commit-dirty=true

@@ -21,7 +21,7 @@ Rank for the keywords in `keywords.json` with clear, sourced, frequently updated
 3. A news hub and topic pages (Shopify).
 4. A picture on every page: an AI illustration (Cloudflare, free) or a generated cover. Never a watermark.
 5. SEO basics: titles, descriptions, canonical links, sitemap, RSS, robots.txt, structured data (Article, NewsArticle, FAQ, Breadcrumbs).
-6. Daily automation on GitHub Actions, deployed to GitHub Pages.
+6. Daily automation on GitHub Actions, deployed to Cloudflare Pages at aiagentnewsfree.com.
 
 ## Out of scope (v1)
 - User accounts, comments, newsletter
@@ -32,7 +32,7 @@ Rank for the keywords in `keywords.json` with clear, sourced, frequently updated
 - A mobile app
 
 ## Success criteria
-1. The site deploys from a clean repo with no secrets added (text uses the built-in `GITHUB_TOKEN`).
+1. The site deploys to https://aiagentnewsfree.com with only two secrets (`CF_ACCOUNT_ID`, `CF_API_TOKEN`); text uses the built-in `GITHUB_TOKEN`.
 2. A daily run adds one digest and never breaks the live site, even when an AI or image service fails.
 3. Every page passes the automated checks: no broken internal links, valid structured data, one H1, alt text on every image.
 4. Lighthouse SEO and accessibility scores ≥ 95 on mobile.
