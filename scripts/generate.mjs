@@ -56,21 +56,26 @@ function readMeta(file) {
   return Object.fromEntries(m[1].split("\n").map((l) => { const i = l.indexOf(":"); return [l.slice(0, i), JSON.parse(l.slice(i + 1))]; }));
 }
 
-// Free images from Pollinations (no key). Saved into the repo so they never change or vanish;
-// a failed download is retried next run, and the build uses an SVG cover meanwhile.
-// The free tier throttles anonymous use, so space requests out and stop for the day once it pushes back.
-const IMAGE_GAP_MS = 25000;
+// Watermark-free images from Cloudflare Workers AI (FLUX schnell, free daily allowance).
+// Needs CF_ACCOUNT_ID + CF_API_TOKEN; without them the build draws its own SVG covers.
+// Images are saved into the repo so they never change; a failed one is retried next run.
+const CF_ACCOUNT = process.env.CF_ACCOUNT_ID;
+const CF_TOKEN = process.env.CF_API_TOKEN;
 let imageFailures = 0;
 async function image(name, subject) {
   const file = path.join(ROOT, "content/images", `${name}.jpg`);
-  if (fs.existsSync(file) || imageFailures >= 3) return;
-  await new Promise((r) => setTimeout(r, IMAGE_GAP_MS));
-  const prompt = `editorial illustration about ${subject}, AI agents, modern flat vector, soft gradients, blue and violet palette, no text, no letters`;
+  if (!CF_ACCOUNT || !CF_TOKEN || fs.existsSync(file) || imageFailures >= 3) return;
+  const prompt = `editorial illustration about ${subject}, AI agents, modern flat vector, soft gradients, blue and violet palette, wide composition, no text, no letters, no logos`;
   try {
-    const res = await fetch(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1200&height=630&nologo=true&seed=${name.length * 97}`, { signal: AbortSignal.timeout(120000) });
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (res.ok && res.headers.get("content-type")?.startsWith("image/") && buf.length > 5000) fs.writeFileSync(file, buf);
-    else { imageFailures++; console.warn(`image ${name}: bad response ${res.status}`); }
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/@cf/black-forest-labs/flux-1-schnell`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${CF_TOKEN}`, "content-type": "application/json" },
+      body: JSON.stringify({ prompt, steps: 6 }),
+      signal: AbortSignal.timeout(120000),
+    });
+    const data = await res.json();
+    if (res.ok && data.result?.image) fs.writeFileSync(file, Buffer.from(data.result.image, "base64"));
+    else { imageFailures++; console.warn(`image ${name}: ${res.status} ${JSON.stringify(data.errors || "")}`); }
   } catch (e) { imageFailures++; console.warn(`image ${name}: ${e.message}`); }
 }
 
