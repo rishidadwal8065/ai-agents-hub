@@ -70,5 +70,5 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           # Creates the Pages project on the first run if it does not exist yet.
-          preCommands: npx wrangler pages project list | grep -q 'aiagentnewsfree' || npx wrangler pages project create aiagentnewsfree --production-branch=main
+          preCommands: npx wrangler pages project list | grep -qw aiagentnewsfree || npx wrangler pages project create aiagentnewsfree --production-branch=main
           command: pages deploy dist --project-name=aiagentnewsfree --branch=main --commit-dirty=true
