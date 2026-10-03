@@ -5,7 +5,8 @@ import fs from "node:fs";
 const wf = fs.readFileSync(new URL("../../.github/workflows/auto.yml", import.meta.url), "utf8");
 
 test("workflow has no control characters (regression: a stray backspace made the YAML invalid)", () => {
-  assert.doesNotMatch(wf, /[\u0000-\u0008\u000B-\u001F\u007F]/);
+  const bad = [...wf].filter((c) => { const n = c.charCodeAt(0); return (n < 32 && n !== 9 && n !== 10 && n !== 13) || n === 127; });
+  assert.deepEqual(bad, []);
 });
 
 test("workflow keeps manual, scheduled and push triggers and deploys only after verify", () => {
