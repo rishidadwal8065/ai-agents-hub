@@ -7,7 +7,7 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 - [x] TASK-002 Content pipeline (guides, daily digest)
 - [x] TASK-003 Static build with SEO (meta, canonical, sitemap, RSS, structured data)
 - [x] TASK-004 Daily GitHub Actions workflow and Pages deploy
-- [x] TASK-005 Free text model (GitHub Models) with Claude as an option
+- [x] TASK-005 Free text model with Claude as an option (now Cloudflare Workers AI, see TASK-023)
 - [x] TASK-006 Watermark-free pictures (Cloudflare + SVG covers)
 - [x] TASK-007 UI/UX design (approved 4 Oct 2026)
 
@@ -29,6 +29,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 - [ ] TASK-L3 Production QA (docs/TEST_PLAN.md)
 - [ ] TASK-L4 Attach aiagentnewsfree.com + www redirect + Always Use HTTPS in Cloudflare
 - [ ] TASK-L5 Google Search Console and Bing Webmaster Tools: verify, submit the sitemap
+
+- [x] TASK-023 Fix: GitHub Models retired; text on Cloudflare Workers AI, plus a Cloudflare settings check in CI
 
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI

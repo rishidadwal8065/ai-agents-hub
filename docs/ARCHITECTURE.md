@@ -9,7 +9,7 @@ GitHub Actions (daily 06:17 UTC, or manual)
   ├─ npm run verify          lint → typecheck → tests + coverage → build
   │
   ├─ scripts/generate.mjs    wires real services into src/generate.mjs
-  │     ├─ src/services/ai.mjs   GitHub Models / Claude (text), Cloudflare (images)
+  │     ├─ src/services/ai.mjs   Cloudflare Workers AI (text + images), Claude optional
   │     ├─ Google News RSS        headlines for the digest
   │     └─ writes content/pages/*.md, content/news/*.md, content/images/*.jpg
   │
@@ -30,8 +30,8 @@ GitHub Actions (daily 06:17 UTC, or manual)
 | Lint | ESLint 9 (`@eslint/js` recommended) |
 | Hosting | Cloudflare Pages (free), custom domain aiagentnewsfree.com, `_headers` for security and caching |
 | CI/CD | GitHub Actions |
-| Text AI | GitHub Models (free) by default; Claude if `ANTHROPIC_API_KEY` is set |
-| Image AI | Cloudflare Workers AI FLUX schnell (free tier), optional |
+| Text AI | Cloudflare Workers AI, Llama 3.3 70B (free tier); Claude if `ANTHROPIC_API_KEY` is set |
+| Image AI | Cloudflare Workers AI FLUX schnell (free tier) |
 
 Why not Next.js, Supabase or Vercel: see DECISIONS.md, ADR-001. Why Cloudflare: ADR-011.
 

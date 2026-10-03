@@ -3,7 +3,7 @@
 The site is static: no logins, no user input, no database, no server. The main risks are leaked secrets, untrusted AI or RSS text ending up in pages, and a compromised CI pipeline.
 
 ## Secrets
-- Secrets live only in GitHub Actions secrets: `ANTHROPIC_API_KEY` (optional), `CF_ACCOUNT_ID`, `CF_API_TOKEN`. `GITHUB_TOKEN` is provided by Actions.
+- Secrets live only in GitHub Actions secrets: `ANTHROPIC_API_KEY` (optional), `CF_ACCOUNT_ID`, `CF_API_TOKEN`.
 - Never commit `.env`. `.gitignore` covers it; `.env.example` lists the names only.
 - AI secrets go only to the "Write new content" step. The Cloudflare token also goes to the deploy step (wrangler). The build step gets no secrets.
 - The Cloudflare token is a custom token with only **Cloudflare Pages: Edit** and **Workers AI: Read** on this account. Nothing else (no DNS or zone edit).
@@ -22,7 +22,7 @@ The site is static: no logins, no user input, no database, no server. The main r
 - Both rules have regression tests in `tests/integration/build.test.mjs`.
 
 ## CI/CD
-- Workflow permissions are minimal: `contents: write` (commit content) and `models: read`. Other jobs are read-only.
+- Workflow permissions are minimal: `contents: write` (commit content). Other jobs are read-only.
 - Deploy only runs after `npm run verify` passes.
 - Dependencies are locked (`package-lock.json`, `npm ci`). Few dependencies: `marked` at runtime; dev tools only otherwise.
 - The content bot commits with `[skip ci]` to avoid loops.

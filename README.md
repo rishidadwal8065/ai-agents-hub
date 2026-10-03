@@ -36,10 +36,10 @@ Preview locally: `npm run build`, then serve `dist/` (for example `python -m htt
 7. Cloudflare → Rules → **Redirect Rules**: redirect `www.aiagentnewsfree.com/*` to `https://aiagentnewsfree.com/${1}` (301).
 8. Google Search Console: add `aiagentnewsfree.com` (DNS verification via Cloudflare) and submit `https://aiagentnewsfree.com/sitemap.xml`.
 
-Text uses GitHub Models through the built-in `GITHUB_TOKEN`, so no AI key is needed.
+The same Cloudflare token runs the free AI for text (Llama 3.3 70B) and pictures (FLUX), so no other AI key is needed. If a run fails, open the **Check Cloudflare settings** step in the Actions log: it says which setting is wrong.
 
 ## Cost
-$0 to run: GitHub Actions (public repo), GitHub Models free tier, Cloudflare Pages and Workers AI free tiers. The only cost is the domain renewal.
+$0 to run: GitHub Actions (public repo), Cloudflare Pages and Workers AI free tiers. The only cost is the domain renewal.
 
 ## Add a keyword
 Add an entry to `pages` in `keywords.json`, then run `npm test` (it validates the file). The next daily run writes the page.

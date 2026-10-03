@@ -32,7 +32,7 @@ Rank for the keywords in `keywords.json` with clear, sourced, frequently updated
 - A mobile app
 
 ## Success criteria
-1. The site deploys to https://aiagentnewsfree.com with only two secrets (`CF_ACCOUNT_ID`, `CF_API_TOKEN`); text uses the built-in `GITHUB_TOKEN`.
+1. The site deploys to https://aiagentnewsfree.com with only two secrets (`CF_ACCOUNT_ID`, `CF_API_TOKEN`), which also run the free AI for text and pictures.
 2. A daily run adds one digest and never breaks the live site, even when an AI or image service fails.
 3. Every page passes the automated checks: no broken internal links, valid structured data, one H1, alt text on every image.
 4. Lighthouse SEO and accessibility scores ≥ 95 on mobile.

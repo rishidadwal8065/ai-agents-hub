@@ -14,7 +14,7 @@
 **Reason:** a free, permanent history of every published word; easy rollback (`git revert`); the build is reproducible; no database.
 
 ## ADR-004: Free AI providers by default
-**Decision:** text from GitHub Models (built-in `GITHUB_TOKEN`); images from Cloudflare Workers AI FLUX schnell (free tier). Claude is supported when `ANTHROPIC_API_KEY` is set.
+**Decision:** text and images from Cloudflare Workers AI (free tier): Llama 3.3 70B for text, FLUX schnell for images. Claude is supported when `ANTHROPIC_API_KEY` is set. (Originally GitHub Models; see ADR-012.)
 **Reason:** the owner requires $0 running cost. Both have free daily allowances well above our ~12 requests a day.
 
 ## ADR-005: No watermarked images
@@ -52,3 +52,7 @@
 **Decision:** deploy `dist/` to Cloudflare Pages with `cloudflare/wrangler-action` (Direct Upload). The domain aiagentnewsfree.com is already on Cloudflare DNS. GitHub Actions still runs the daily content job.
 **Reason:** owner choice. Free, global CDN, custom domain with automatic HTTPS, `_headers` support for security headers, and the same account powers the free AI pictures. One token (Pages Edit + Workers AI) covers both.
 **Replaces:** GitHub Pages hosting.
+
+## ADR-012: Text moves from GitHub Models to Cloudflare Workers AI
+**Decision:** Cloudflare Workers AI `@cf/meta/llama-3.3-70b-instruct-fp8-fast` writes the guides and digests.
+**Reason:** GitHub Models was retired on 30 July 2026; its endpoint now answers a plain "OK", which broke the first live run. Cloudflare is already our host and picture provider, so the same free account and token cover everything. The free daily allowance may not fit all 10 guides on day 1; leftovers are written on the following days (ADR-006).

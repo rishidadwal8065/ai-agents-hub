@@ -26,20 +26,30 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      models: read
     environment: { name: production, url: "https://aiagentnewsfree.com" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
+      # Explains Cloudflare setup problems in plain words (never prints the secrets).
+      - name: Check Cloudflare settings
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          id="$(echo -n "$CF_ACCOUNT_ID" | tr -d '[:space:]')"
+          if [[ ! "$id" =~ ^[0-9a-fA-F]{32}$ ]]; then echo "::error::CF_ACCOUNT_ID is not a 32-character hex id (length ${#id}). Copy it from the dashboard URL: dash.cloudflare.com/<ACCOUNT_ID>/home"; fi
+          verify() { curl -s "$1" -H "Authorization: Bearer $(echo -n "$CF_API_TOKEN" | tr -d '[:space:]')" | grep -q '"status":"active"'; }
+          if verify "https://api.cloudflare.com/client/v4/user/tokens/verify" || verify "https://api.cloudflare.com/client/v4/accounts/$id/tokens/verify"; then echo "CF_API_TOKEN is active"; else echo "::error::CF_API_TOKEN is not valid or not active. Create a Custom Token with Account > Cloudflare Pages > Edit and Account > Workers AI > Read"; fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' "https://api.cloudflare.com/client/v4/accounts/$id/pages/projects/aiagentnewsfree" -H "Authorization: Bearer $(echo -n "$CF_API_TOKEN" | tr -d '[:space:]')")
+          if [ "$code" = "200" ]; then echo "Pages project aiagentnewsfree found"; else echo "::error::Cannot read Pages project 'aiagentnewsfree' (HTTP $code): check the project name, the account id and the token's 'Cloudflare Pages: Edit' permission"; fi
       - name: Write new content
         if: github.event_name != 'push'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # optional, paid
           AI_MODEL: ${{ vars.AI_MODEL }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }} # optional, free: watermark-free AI pictures
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }} # free text (Llama 3.3) + pictures (FLUX) on Workers AI
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: npm run generate
       # Build before committing: new content that breaks the build is never published or saved.
@@ -56,6 +66,7 @@ jobs:
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
+          wranglerVersion: "4"
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: pages deploy dist --project-name=aiagentnewsfree --branch=main --commit-dirty=true
