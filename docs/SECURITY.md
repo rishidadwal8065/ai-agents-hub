@@ -14,7 +14,7 @@ The site is static: no logins, no user input, no database, no server. The main r
 - RSS: only http(s) links are kept; tags are stripped.
 - AI output must pass `parseAiHeader` (required labels plus a non-empty body) or it is discarded.
 - Titles and descriptions are HTML-escaped (`esc`) wherever they are inserted into templates.
-- JSON-LD is serialised with `<` escaped as `<`, so content can't close the `<script>` tag.
+- JSON-LD is serialised with `<` escaped as `\u003c`, so content can't close the `<script>` tag.
 - Images must be real JPEGs (magic bytes checked) before they are saved.
 - `CF_ACCOUNT_ID` must be a 32-character hex string before it is put in a URL.
 - Raw HTML inside AI-written Markdown (`<script>`, `<iframe>`, event handlers) is escaped and shown as text, never run.
