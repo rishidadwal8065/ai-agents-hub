@@ -15,9 +15,9 @@ const REFRESH_DAYS = 90;
 const today = new Date().toISOString().slice(0, 10);
 
 if (!ANTHROPIC && !GH) {
-  console.log("No GITHUB_TOKEN or ANTHROPIC_API_KEY - skipping generation, building existing content only.");
-  process.exit(0);
+  console.log("No GITHUB_TOKEN or ANTHROPIC_API_KEY - skipping text, fetching images only.");
 }
+const AI = Boolean(ANTHROPIC || GH);
 
 async function claude(system, prompt) {
   if (ANTHROPIC) {
@@ -54,6 +54,35 @@ function readMeta(file) {
   const m = fs.readFileSync(file, "utf8").match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
   return Object.fromEntries(m[1].split("\n").map((l) => { const i = l.indexOf(":"); return [l.slice(0, i), JSON.parse(l.slice(i + 1))]; }));
+}
+
+// Free images from Pollinations (no key). Saved into the repo so they never change or vanish;
+// a failed download is retried next run, and the build uses an SVG cover meanwhile.
+// The free tier throttles anonymous use, so space requests out and stop for the day once it pushes back.
+const IMAGE_GAP_MS = 25000;
+let imageFailures = 0;
+async function image(name, subject) {
+  const file = path.join(ROOT, "content/images", `${name}.jpg`);
+  if (fs.existsSync(file) || imageFailures >= 3) return;
+  await new Promise((r) => setTimeout(r, IMAGE_GAP_MS));
+  const prompt = `editorial illustration about ${subject}, AI agents, modern flat vector, soft gradients, blue and violet palette, no text, no letters`;
+  try {
+    const res = await fetch(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1200&height=630&nologo=true&seed=${name.length * 97}`, { signal: AbortSignal.timeout(120000) });
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (res.ok && res.headers.get("content-type")?.startsWith("image/") && buf.length > 5000) fs.writeFileSync(file, buf);
+    else { imageFailures++; console.warn(`image ${name}: bad response ${res.status}`); }
+  } catch (e) { imageFailures++; console.warn(`image ${name}: ${e.message}`); }
+}
+
+async function images() {
+  fs.mkdirSync(path.join(ROOT, "content/images"), { recursive: true });
+  for (const p of cfg.pages) await image(p.slug, p.keyword);
+  await image(cfg.news.hub.slug, "AI agents news headlines");
+  for (const t of cfg.news.topicPages) await image(t.slug, t.keyword);
+  for (const f of fs.readdirSync(path.join(ROOT, "content/news")).filter((f) => f.endsWith(".md"))) {
+    const m = readMeta(path.join(ROOT, "content/news", f));
+    await image(`news-${m.date}`, m.title);
+  }
 }
 
 async function evergreen() {
@@ -114,5 +143,6 @@ Headlines:\n${list}`);
 }
 
 // Free tier has daily request limits, so a failed page is retried on the next run instead of failing the deploy.
-try { await evergreen(); } catch (e) { console.warn(`pages: ${e.message}`); }
-try { await news(); } catch (e) { console.warn(`news: ${e.message}`); }
+if (AI) try { await evergreen(); } catch (e) { console.warn(`pages: ${e.message}`); }
+if (AI) try { await news(); } catch (e) { console.warn(`news: ${e.message}`); }
+await images();

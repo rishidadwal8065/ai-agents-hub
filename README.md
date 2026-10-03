@@ -17,4 +17,4 @@ A website that runs itself. It targets the "ai agents" keywords listed in `keywo
 To target more keywords, add entries to `keywords.json`.
 
 ## Cost
-$0: public GitHub repo (free Actions + Pages) and GitHub Models free tier. Optional custom domain ~$10/year.
+$0: public GitHub repo (free Actions + Pages), GitHub Models free tier for text, Pollinations free tier for pictures. Pictures arrive a few per day; until then each page shows a generated cover. Optional custom domain ~$10/year.
