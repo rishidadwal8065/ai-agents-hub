@@ -15,7 +15,9 @@ GitHub Actions (daily 06:17 UTC, or manual)
   │
   ├─ git commit content/     (so every published word is in history)
   │
-  ├─ scripts/build.mjs       content/ → dist/ (HTML, sitemap, RSS, covers)
+  ├─ translations            ≤10/run into content/i18n/<lang>/ (src/lib/translate.mjs plans them)
+  │
+  ├─ scripts/build.mjs       → src/site/build.mjs: content/ → dist/ in 16 languages (HTML, hreflang, sitemap, RSS, covers)
   │
   └─ wrangler pages deploy dist/ → Cloudflare Pages (project "aiagentnewsfree")
 ```
@@ -42,13 +44,17 @@ src/
   lib/content.mjs     front matter, RSS parsing, AI-output parsing, text helpers (pure)
   lib/seo.mjs         structured data, table of contents, SVG covers (pure)
   lib/config.mjs      keywords.json validation
+  lib/i18n.mjs        16 languages + all UI text (hand-written), t(), langPath(), formatDate()
+  lib/translate.mjs   which translations to make next; link-preservation guard
+  site/build.mjs      the site renderer (layout, pages for every language)
   services/ai.mjs     the only code that talks to AI providers
 scripts/
   generate.mjs        entry point: env → services → generate()
   build.mjs           static site renderer
-public/style.css      the whole design system (tokens in :root)
+public/style.css      the whole design system (tokens in :root, light + dark)
+public/site.js        theme switch, language menu, search filter
 content/              generated content, committed by the bot
-  pages/  news/  images/
+  pages/  news/  images/  i18n/<lang>/{pages,news}/
 tests/
   unit/  integration/  fixtures/
 keywords.json         the keyword plan and news feeds (the main thing to edit)

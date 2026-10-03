@@ -3,6 +3,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { toFrontmatter, parseFrontmatter, parseRss, parseAiHeader, isStale, titleCase } from "./lib/content.mjs";
+import { planTranslations, sameLinks } from "./lib/translate.mjs";
+import { LANGUAGES, language } from "./lib/i18n.mjs";
 
 export const REFRESH_DAYS = 90;
 const MAX_IMAGE_FAILURES = 3;
@@ -112,10 +114,71 @@ async function images({ cfg, contentDir, image, log = console.log }) {
   }
 }
 
+/**
+ * Translates English content into other languages, a few items per run (free tier budget).
+ * Output: content/i18n/<lang>/<pages|news>/<id>.md with source_updated pointing at the English version.
+ * @param {Options} o
+ */
+async function translations({ cfg, contentDir, complete, log = console.log }) {
+  if (!complete || !cfg.translation) return;
+  /** @param {"pages" | "news"} kind */
+  const sources = (kind) => {
+    const dir = path.join(contentDir, kind);
+    return (fs.existsSync(dir) ? fs.readdirSync(dir) : []).filter((f) => f.endsWith(".md")).map((f) => {
+      const id = f.replace(/\.md$/, "");
+      const parsed = parseFrontmatter(fs.readFileSync(path.join(dir, f), "utf8"));
+      return parsed ? { id, updated: String(parsed.meta.updated ?? parsed.meta.date), meta: parsed.meta, body: parsed.body } : null;
+    }).filter((x) => x !== null);
+  };
+  const order = cfg.pages.map((/** @type {any} */ p) => p.slug);
+  const guides = sources("pages").sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  const digests = sources("news");
+  /** @type {Map<string, string>} */
+  const existing = new Map();
+  const others = LANGUAGES.slice(1).map((l) => l.code);
+  for (const lang of others) for (const kind of ["pages", "news"]) {
+    const dir = path.join(contentDir, "i18n", lang, kind);
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir).filter((f) => f.endsWith(".md"))) {
+      const m = readMeta(path.join(dir, f));
+      if (m?.source_updated) existing.set(`${lang}/${kind}/${f.replace(/\.md$/, "")}`, String(m.source_updated));
+    }
+  }
+  const jobs = planTranslations({ guides, digests, languages: others, newsLanguages: cfg.translation.newsLanguages ?? [], max: cfg.translation.maxPerRun ?? 10, existing });
+  for (const job of jobs) {
+    const src = (job.kind === "pages" ? guides : digests).find((s) => s.id === job.id);
+    if (!src) continue;
+    const name = language(job.lang).name;
+    try {
+      const out = parseAiHeader(await complete(`You are a professional translator. Translate from English into ${name} (${job.lang}). Keep the meaning, tone and Markdown structure exactly: same headings, lists, tables and order. Translate link text but never change link URLs. Keep product and company names as they are. Output only the result.`,
+        `Translate this article into ${name}.
+First line: "TITLE: " + the translated title. Second line: "DESC: " + the translated description. Then a blank line and the translated Markdown body.
+
+Title: ${src.meta.title}
+Description: ${src.meta.description}
+<<<SOURCE
+${src.body.trim()}
+SOURCE>>>`), ["TITLE", "DESC"]);
+      if (!out) { log(`translate ${job.lang}/${job.id}: no TITLE/DESC, skipped`); continue; }
+      if (!sameLinks(src.body, out.body)) { log(`translate ${job.lang}/${job.id}: links changed, skipped`); continue; }
+      const dir = path.join(contentDir, "i18n", job.lang, job.kind);
+      fs.mkdirSync(dir, { recursive: true });
+      const meta = job.kind === "pages"
+        ? { title: out.fields.TITLE.slice(0, 120), description: out.fields.DESC.slice(0, 200), keyword: src.meta.keyword, updated: src.updated, source_updated: src.updated }
+        : { title: out.fields.TITLE.slice(0, 120), description: out.fields.DESC.slice(0, 200), date: src.meta.date, topics: src.meta.topics ?? [], source_updated: src.updated };
+      fs.writeFileSync(path.join(dir, `${job.id}.md`), toFrontmatter(meta) + out.body + "\n");
+      log(`translate ${job.lang}/${job.kind}/${job.id}: written`);
+    } catch (e) {
+      log(`translate ${job.lang}/${job.id}: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+}
+
 /** @param {Options} o */
 export async function generate(o) {
   for (const d of ["pages", "news", "images"]) fs.mkdirSync(path.join(o.contentDir, d), { recursive: true });
   await guides(o);
   try { await news(o); } catch (e) { (o.log ?? console.log)(`news: ${e instanceof Error ? e.message : e}`); }
+  await translations(o);
   await images(o);
 }

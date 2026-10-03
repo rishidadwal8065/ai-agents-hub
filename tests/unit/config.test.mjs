@@ -24,3 +24,11 @@ test("missing sections are reported instead of crashing", () => {
   assert.ok(validateConfig({}).length > 0);
   assert.ok(validateConfig(null).length > 0);
 });
+
+test("translation settings are validated", () => {
+  const bad = structuredClone(real);
+  bad.translation = { maxPerRun: -1, newsLanguages: ["xx", "en"] };
+  const errors = validateConfig(bad).join("\n");
+  assert.match(errors, /maxPerRun/);
+  assert.match(errors, /newsLanguages/);
+});

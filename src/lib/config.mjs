@@ -1,6 +1,9 @@
 // Validates keywords.json so a typo fails the run instead of publishing a broken site.
 
+import { LANGUAGES } from "./i18n.mjs";
+
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const KNOWN = new Set(LANGUAGES.map((l) => l.code));
 
 /**
  * @param {any} cfg
@@ -48,6 +51,11 @@ export function validateConfig(cfg) {
       slug(t?.slug, `news.topicPages[${i}]`);
       if (!topics.has(t?.topic)) errors.push(`news.topicPages[${i}].topic "${t?.topic}" has no matching feed`);
     });
+  }
+  if (cfg.translation !== undefined) {
+    const tr = cfg.translation;
+    if (!Number.isInteger(tr?.maxPerRun) || tr.maxPerRun < 0 || tr.maxPerRun > 100) errors.push("translation.maxPerRun must be an integer from 0 to 100");
+    if (!Array.isArray(tr?.newsLanguages) || tr.newsLanguages.some((/** @type {unknown} */ l) => typeof l !== "string" || !KNOWN.has(l) || l === "en")) errors.push("translation.newsLanguages must list non-English language codes from src/lib/i18n.mjs");
   }
   return errors;
 }

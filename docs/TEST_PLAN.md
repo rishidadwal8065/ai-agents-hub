@@ -23,9 +23,17 @@ Coverage thresholds (on `src/`): lines ≥ 85%, branches ≥ 70%.
 | Generator (fake AI and fake feeds) | Writes all guides and one digest; same-day rerun makes no AI calls; used headlines are never reused; bad AI output is not published; one failure does not stop the others; images are saved once; image attempts stop after 3 failures; a headline in several feeds keeps all its topics |
 | Build (fixture content) | All routes exist; **no broken internal links or images**; base path applied; one H1, title, description, canonical and og:image per page; JSON-LD parses; FAQ and breadcrumbs present; no `undefined`/`NaN` leaks; viewport, lang, skip link, alt text; sitemap complete and absolute, without the 404; topic filtering; SVG cover fallback; invalid config fails the build |
 
+### Languages, theme and search (`tests/unit/i18n.test.mjs`, `tests/unit/translate.test.mjs`, build tests)
+- All 16 languages have every UI string with matching placeholders, really translated; Arabic is RTL
+- Translation plan: newest digest first, then guides language by language, capped; up-to-date ones skipped, outdated redone; translations that change links rejected
+- Language pages: lang/dir attributes, reciprocal hreflang + x-default, localized internal links, EN-badged fallbacks, noindex + sitemap exclusion for empty languages, language menu with 16 entries
+- Theme script loaded in head, toggle button present, dark tokens in CSS; search page lists every item; CSP `script-src 'self'`; no inline scripts or handlers
+
 ## Manual QA (before launch, and after design changes)
 - [ ] 375px, 768px, 1280px: no horizontal scroll, the menu swipes on mobile
-- [ ] Light and dark mode
+- [ ] Light and dark mode: the toggle switches, the choice survives a reload, and with no choice the system setting wins
+- [ ] Language menu: every language opens; Arabic page mirrors right-to-left
+- [ ] Search: typing filters results
 - [ ] Keyboard only: skip link, focus ring visible, every link reachable
 - [ ] Lighthouse mobile: SEO ≥ 95, Accessibility ≥ 95, Performance ≥ 90
 - [ ] Google Rich Results Test on one guide (FAQ, Breadcrumb, Article)

@@ -8,6 +8,8 @@ import { generate } from "../../src/generate.mjs";
 import { parseFrontmatter } from "../../src/lib/content.mjs";
 
 const cfg = JSON.parse(fs.readFileSync(new URL("../../keywords.json", import.meta.url), "utf8"));
+// Translation has its own tests below; the base tests run with it off.
+delete cfg.translation;
 const RSS = `<rss><channel>${[1, 2, 3, 4].map((i) => `<item><title>Headline ${i}</title><link>https://news.example/${i}</link><source>Wire</source><pubDate>Sat</pubDate></item>`).join("")}</channel></rss>`;
 
 function setup() {
@@ -86,4 +88,42 @@ test("image generation stops for the day after 3 failures", async () => {
   const image = async () => { requests++; throw new Error("quota"); };
   await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: null, fetchFn: fakeFetch, image, log: () => {} });
   assert.equal(requests, 3);
+});
+
+// --- Translations -------------------------------------------------------------
+
+/** Fake translator: echoes the English body back so links are preserved. @type {import("../../src/generate.mjs").Complete} */
+const fakeTranslator = async (_s, prompt) => {
+  if (!prompt.includes("<<<SOURCE")) return fakeAi([])(_s, prompt);
+  const src = prompt.split("<<<SOURCE\n")[1].split("\nSOURCE>>>")[0];
+  return `TITLE: Traducido\nDESC: Resumen\n\n${src}`;
+};
+const i18nCfg = { ...cfg, translation: { maxPerRun: 4, newsLanguages: ["es"] } };
+
+test("translations: newest digest first, then guides, capped per run, with source date", async () => {
+  const dir = setup();
+  await generate({ cfg: i18nCfg, contentDir: dir, today: "2026-10-04", complete: fakeTranslator, fetchFn: fakeFetch, log: () => {} });
+  const news = parseFrontmatter(fs.readFileSync(path.join(dir, "i18n/es/news/2026-10-04.md"), "utf8"));
+  assert.equal(news?.meta.title, "Traducido");
+  assert.equal(news?.meta.date, "2026-10-04");
+  assert.deepEqual(news?.meta.topics.sort(), cfg.news.feeds.map((/** @type {{ topic: string }} */ f) => f.topic).sort());
+  const esPages = fs.readdirSync(path.join(dir, "i18n/es/pages"));
+  assert.equal(esPages.length, 3, "cap of 4 = 1 digest + 3 guides");
+  const guide = parseFrontmatter(fs.readFileSync(path.join(dir, "i18n/es/pages", esPages[0]), "utf8"));
+  assert.equal(guide?.meta.source_updated, "2026-10-04");
+  assert.ok(guide?.meta.keyword);
+});
+
+test("translations that change links are rejected", async () => {
+  const dir = setup();
+  /** @type {import("../../src/generate.mjs").Complete} */
+  const sneaky = async (s, p) => p.includes("<<<SOURCE") ? "TITLE: T\nDESC: D\n\n[spam](https://spam.example)" : fakeAi([])(s, p);
+  await generate({ cfg: i18nCfg, contentDir: dir, today: "2026-10-04", complete: sneaky, fetchFn: fakeFetch, log: () => {} });
+  assert.ok(!fs.existsSync(path.join(dir, "i18n/es/pages")) || fs.readdirSync(path.join(dir, "i18n/es/pages")).length === 0);
+});
+
+test("translation is off when the config has no translation section", async () => {
+  const dir = setup();
+  await generate({ cfg, contentDir: dir, today: "2026-10-04", complete: fakeTranslator, fetchFn: fakeFetch, log: () => {} });
+  assert.ok(!fs.existsSync(path.join(dir, "i18n")));
 });

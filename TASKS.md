@@ -32,6 +32,12 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 
 - [x] TASK-023 Fix: GitHub Models retired; text on Cloudflare Workers AI, plus a Cloudflare settings check in CI
 
+## Phase 5: Languages and UI upgrade ✅
+- [x] TASK-024 16 languages: UI strings, `/<lang>/` pages, hreflang, language menu, RTL
+- [x] TASK-025 Daily machine translation within the free budget (10/run), link-preservation guard
+- [x] TASK-026 Light/dark switch that remembers the choice
+- [x] TASK-027 UI upgrade: header actions, hero glow and stats, search page, reading progress, richer footer
+
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI
 - [ ] TASK-017 Lighthouse CI budget (SEO and accessibility ≥ 95)

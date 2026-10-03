@@ -9,4 +9,6 @@ export default [
     languageOptions: { ecmaVersion: 2024, sourceType: "module", globals: globals.node },
     rules: { "no-unused-vars": ["error", { argsIgnorePattern: "^_" }], eqeqeq: "error", "prefer-const": "error" },
   },
+  // The browser script (theme switch and search) runs in the page, not in Node.
+  { files: ["public/**/*.js"], languageOptions: { sourceType: "script", globals: globals.browser } },
 ];

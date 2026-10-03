@@ -56,3 +56,11 @@
 ## ADR-012: Text moves from GitHub Models to Cloudflare Workers AI
 **Decision:** Cloudflare Workers AI `@cf/meta/llama-3.3-70b-instruct-fp8-fast` writes the guides and digests.
 **Reason:** GitHub Models was retired on 30 July 2026; its endpoint now answers a plain "OK", which broke the first live run. Cloudflare is already our host and picture provider, so the same free account and token cover everything. The free daily allowance may not fit all 10 guides on day 1; leftovers are written on the following days (ADR-006).
+
+## ADR-013: 16 languages, translated gradually within the free AI budget
+**Decision:** UI text for 16 languages lives in `src/lib/i18n.mjs` (hand-written). Articles are machine-translated by the daily run into `content/i18n/<lang>/`, at most `translation.maxPerRun` (10) per run: the newest digest in `newsLanguages` (es, pt, hi), then guides one language at a time in priority order. Translations must keep every link exactly (`sameLinks`) or they are discarded. Pages live under `/<lang>/` with `hreflang` alternates.
+**Reason:** Cloudflare's free Workers AI allowance fits ~10 long translations a day; all 150 guide translations fill in over ~15 days without cost. Language pages with no translated content yet are `noindex` and left out of the sitemap, so Google never sees thin pages.
+
+## ADR-014: A small same-origin script for the theme switch and search
+**Decision:** `public/site.js` (served as `/assets/site.js`, loaded in `<head>`) applies the saved theme before paint, toggles light/dark, closes the language menu and filters the search page. CSP changes from `script-src 'none'` to `script-src 'self'`; there are still no inline scripts or event handlers (tested).
+**Reason:** a remembered theme choice and live search need JavaScript. Without JS the site still works: the theme follows the system, the language menu is a native `<details>`, and the search page lists everything.
