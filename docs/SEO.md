@@ -8,12 +8,12 @@ What the site does for search engines, and where it is tested (`tests/integratio
 | Fast static pages | Plain HTML, inline CSS, one small script, fixed image sizes (no layout shift), lazy images below the fold |
 | HTTPS, security headers | Cloudflare + generated `_headers` |
 | Canonical URLs | Every page, absolute, trailing slash |
-| Robots meta | `index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1`; `noindex, follow` for search, 404 and empty languages |
+| Robots meta | `index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1`; `noindex, follow` only for search and 404 (enforced by a build test) |
 | robots.txt | Allows all; lists both sitemaps |
 | Sitemap | `/sitemap.xml`: every indexable page, `lastmod`, **hreflang alternates** and **image** entries |
 | News sitemap | `/news-sitemap.xml`: digests from the last 2 days in every language (Google News format) |
 | IndexNow | Key file `/<key>.txt`; the daily run sends new and changed URLs to Bing, Yandex, Seznam and Naver after deploy |
-| Languages | `/<lang>/` paths, reciprocal `hreflang` + `x-default`, `lang`/`dir` on `<html>`, `og:locale` + alternates |
+| Languages | Pages only for languages with content (others redirect 302 to English via `_redirects`); `/<lang>/` paths, reciprocal `hreflang` + `x-default`, `lang`/`dir` on `<html>`, `og:locale` + alternates |
 | Icons | Real `/favicon.svg`, `/logo.svg`, `/site.webmanifest`, so Google can show the site icon in results |
 | 404 | Real 404 status with a helpful page |
 
