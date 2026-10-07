@@ -26,7 +26,7 @@ Coverage thresholds (on `src/`): lines ≥ 85%, branches ≥ 70%.
 ### Languages, theme and search (`tests/unit/i18n.test.mjs`, `tests/unit/translate.test.mjs`, build tests)
 - All 16 languages have every UI string with matching placeholders, really translated; Arabic is RTL
 - Translation plan: newest digest first, then guides language by language, capped; up-to-date ones skipped, outdated redone; translations that change links rejected
-- Language pages: lang/dir attributes, reciprocal hreflang + x-default, localized internal links, EN-badged fallbacks, noindex + sitemap exclusion for empty languages, language menu with 16 entries
+- Language pages: lang/dir attributes, reciprocal hreflang + x-default, localized internal links, EN-badged fallbacks, no pages for empty languages (302 via `_redirects`), only search/404 noindex, language menu lists languages with content
 - Theme script loaded in head, toggle button present, dark tokens in CSS; search page lists every item; CSP `script-src 'self'`; no inline scripts or handlers
 
 ## Manual QA (before launch, and after design changes)

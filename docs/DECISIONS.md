@@ -81,3 +81,8 @@
 ## ADR-018: Spend the free daily AI allowance on the most important work first
 **Decision:** each run does today's digest first, then at most `maxGuidesPerRun` (3) guide rewrites, then up to `translation.maxPerRun` (8) translations, then pictures. The first "daily allowance used up" error (Cloudflare code 4006) stops all further AI calls for that run and is logged once.
 **Reason:** Cloudflare's free tier is about 10,000 neurons a day. Guides used to run first and could use the whole allowance, skipping the daily news; after the limit, every remaining item failed noisily. The full v2 guide rewrite now completes over about 4 days without ever missing a digest.
+
+## ADR-019: No pages for languages without content
+**Decision:** the build makes pages only for languages that have at least one translated guide or digest. The language menu, hreflang and the "N languages" counts list only those languages. Urls of empty languages redirect (302) to the English page through a generated `_redirects`; the redirect disappears by itself once the language has content. Only `/search/` pages and the 404 are `noindex`, and a build test enforces that.
+**Reason:** Search Console (4 Oct 2026) reported 49 pages "Excluded by 'noindex' tag": 12 empty languages × 5 placeholder pages, crawled through the language menu on every page. Placeholder pages gave readers nothing and filled the report; not building them removes the cause.
+**Replaces:** ADR-013's noindex for empty languages.

@@ -1,6 +1,6 @@
 # Project Memory
 
-_Last updated: 4 Oct 2026_
+_Last updated: 7 Oct 2026_
 
 ## Current status
 Code complete for v1 and verified locally (`npm run verify`: 121 tests pass, 99% line coverage on `src/`). **Live since 3 Oct 2026** at https://aiagentnewsfree.com (first run: 10 guides, 1 digest from 75 headlines, 13 AI pictures).
@@ -14,6 +14,7 @@ Code complete for v1 and verified locally (`npm run verify`: 121 tests pass, 99%
 - 16 languages (translations fill in ~10/day, newest digest in es/pt/hi first), light/dark switch, search, upgraded UI (4 Oct 2026)
 - Advanced SEO (see docs/SEO.md): News sitemap, IndexNow, rich structured data, About page
 - Content quality v2 (4 Oct 2026): stricter brief + quality gates; 3 guides are rewritten per run (about 4 days), translations follow; the free AI allowance resets at 00:00 UTC
+- Search Console fix (7 Oct 2026): empty languages no longer get noindex placeholder pages (were 49 "Excluded by noindex"); they 302 to English until translated
 - Security hardening: escaping raw HTML, link-scheme allow-list, JPEG check, account-id validation
 
 ## Current task

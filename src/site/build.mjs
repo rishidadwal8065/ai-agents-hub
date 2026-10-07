@@ -112,8 +112,11 @@ export function buildSite({ contentDir, outDir, cfg, site, css, js }) {
   for (const lang of codes) exists[lang] = new Set([...shared, ...guides[lang].map((g) => `/${g.id}/`), ...digests[lang].map((d) => `/news/${d.meta.date}/`)]);
   /** @param {string} lang */
   const hasContent = (lang) => lang === "en" || guides[lang].length > 0 || digests[lang].length > 0;
+  // Only languages with content get pages: an empty language would be a set of thin noindex pages
+  // that Google finds through the menu and reports as "Excluded by noindex".
+  const live = codes.filter(hasContent);
   /** Languages in which page `key` exists and may be indexed. @param {string} key */
-  const versions = (key) => codes.filter((l) => exists[l].has(key) && hasContent(l) && key !== "/search/");
+  const versions = (key) => live.filter((l) => exists[l].has(key) && key !== "/search/");
 
   // ---- Layout --------------------------------------------------------------------------------
   /** @type {{ loc: string, lastmod?: string, key: string, lang: string, image?: string }[]} */
@@ -147,7 +150,7 @@ export function buildSite({ contentDir, outDir, cfg, site, css, js }) {
       return `<a href="${href}"${p === key ? ' aria-current="page"' : ""}>${esc(t(lang, k))}</a>`;
     };
     const nav = [["/", "nav_home"], ["/what-are-ai-agents/", "nav_basics"], ["/ai-agents-examples/", "nav_examples"], ["/how-to-build-ai-agents/", "nav_build"], ["/ai-agents-for-business/", "nav_business"], [`/${hub}/`, "nav_news"]].map(([p, k]) => navLink(p, k)).join("");
-    const langMenu = LANGUAGES.map((l) => {
+    const langMenu = LANGUAGES.filter((l) => live.includes(l.code)).map((l) => {
       const href = exists[l.code].has(key) ? langPath(l.code, key) : langPath(l.code, "/");
       return `<a href="${href}" hreflang="${l.code}" lang="${l.code}"${l.code === lang ? ' aria-current="true"' : ""}>${esc(l.name)}</a>`;
     }).join("");
@@ -172,7 +175,7 @@ export function buildSite({ contentDir, outDir, cfg, site, css, js }) {
 <div><h2>${esc(t(lang, "guides"))}</h2><ul>${footGuides}</ul></div>
 <div><h2>${esc(t(lang, "nav_news"))}</h2><ul><li><a href="${langPath(lang, `/${hub}/`)}">${esc(t(lang, "news_name"))}</a></li>${cfg.news.topicPages.map((/** @type {any} */ tp) => `<li><a href="${langPath(lang, `/${tp.slug}/`)}">${esc(titleCase(tp.topic))}</a></li>`).join("")}<li><a href="/feed.xml">RSS</a></li></ul></div>
 <div><h2>${esc(t(lang, "footer_site"))}</h2><ul><li><a href="${langPath(lang, "/search/")}">${esc(t(lang, "search"))}</a></li><li><a href="${langPath(lang, "/about/")}">${esc(t(lang, "about"))}</a></li><li><a href="/sitemap.xml">Sitemap</a></li><li><a href="#main">${esc(t(lang, "back_to_top"))} ↑</a></li></ul></div></div>
-<p class="copy">© ${year} ${esc(cfg.site.name)} · ${esc(t(lang, "stat_langs", { n: LANGUAGES.length }))}</p></footer></body></html>`;
+<p class="copy">© ${year} ${esc(cfg.site.name)} · ${esc(t(lang, "stat_langs", { n: live.length }))}</p></footer></body></html>`;
     const out = path.join(outDir, route, "index.html");
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, html.replace(/(href|src)="\/(?!\/)/g, `$1="${BASE}/`));
@@ -218,7 +221,7 @@ ${note}${img(e.image, e.meta.title, false).replace("<img", '<img class="hero"')}
   }
 
   // ---- Pages per language -------------------------------------------------------------------
-  for (const lang of codes) {
+  for (const lang of live) {
     const G = guides[lang];
     const D = digests[lang];
     const home = langPath(lang, "/");
@@ -277,7 +280,7 @@ ${latest ? `<div class="sec-head"><h2>${esc(t(lang, "todays_digest"))}</h2></div
     page(lang, "/about/", { image: hubImg, title: titled(t(lang, "about_title")), description: t(lang, "about_text"),
       jsonld: [{ "@context": "https://schema.org", "@type": "AboutPage", name: t(lang, "about_title"), url: `${SITE}${langPath(lang, "/about/")}`, inLanguage: lang, about: org, mainEntity: org }, crumbsLd(SITE, [[t(lang, "nav_home"), home], [t(lang, "about"), langPath(lang, "/about/")]])],
       body: `<section class="hero-band small"><nav class="crumbs"><a href="${home}">${esc(t(lang, "nav_home"))}</a><span aria-hidden="true">›</span><span>${esc(t(lang, "about"))}</span></nav><h1>${esc(t(lang, "about_title"))}</h1><p class="lead">${esc(t(lang, "tagline"))}</p></section>
-<div class="prose about"><p>${esc(t(lang, "about_text"))}</p><ul class="stats"><li><b>${guides.en.length}</b> ${esc(t(lang, "stat_guides", { n: "" }).trim())}</li><li><b>${digests.en.length}</b> ${esc(t(lang, "nav_news"))}</li><li><b>${LANGUAGES.length}</b> ${esc(t(lang, "stat_langs", { n: "" }).trim())}</li></ul>
+<div class="prose about"><p>${esc(t(lang, "about_text"))}</p><ul class="stats"><li><b>${guides.en.length}</b> ${esc(t(lang, "stat_guides", { n: "" }).trim())}</li><li><b>${digests.en.length}</b> ${esc(t(lang, "nav_news"))}</li><li><b>${live.length}</b> ${esc(t(lang, "stat_langs", { n: "" }).trim())}</li></ul>
 <p><a class="btn primary" href="${hubPath}">${esc(t(lang, "cta_news"))} →</a></p></div>` });
 
     // Home
@@ -292,7 +295,7 @@ ${latest ? `<div class="sec-head"><h2>${esc(t(lang, "todays_digest"))}</h2></div
       body: `<section class="hero-band"><span class="eyebrow"><i class="dot"></i>${esc(t(lang, "hero_eyebrow"))}</span><h1>${esc(t(lang, "hero_title"))}</h1>
 <p class="lead">${esc(t(lang, "hero_lead"))}</p>
 <div class="cta">${start ? `<a class="btn primary" href="${langPath(lang, "/what-are-ai-agents/")}">${esc(t(lang, "cta_start"))} →</a>` : ""}<a class="btn${start ? "" : " primary"}" href="${hubPath}">${esc(t(lang, "cta_news"))}</a></div>
-<ul class="stats"><li><b>${G.length || guides.en.length}</b> ${esc(t(lang, "stat_guides", { n: "" }).trim())}</li><li><b>24h</b> ${esc(t(lang, "stat_daily"))}</li><li><b>${LANGUAGES.length}</b> ${esc(t(lang, "stat_langs", { n: "" }).trim())}</li></ul>${chips}</section>
+<ul class="stats"><li><b>${G.length || guides.en.length}</b> ${esc(t(lang, "stat_guides", { n: "" }).trim())}</li><li><b>24h</b> ${esc(t(lang, "stat_daily"))}</li><li><b>${live.length}</b> ${esc(t(lang, "stat_langs", { n: "" }).trim())}</li></ul>${chips}</section>
 ${start ? `<section><div class="sec-head"><h2>${esc(t(lang, "start_here"))}</h2></div><ul class="grid feature">${card(lang, langPath(lang, `/${start.id}/`), start.image, start.meta.title, start.meta.description, esc(t(lang, "min_read", { n: start.minutes })))}</ul></section>` : ""}
 <section><div class="sec-head" id="guides"><h2>${esc(t(lang, "guides"))}</h2></div>${rest.length ? `<ul class="grid">${rest.map((g) => card(lang, langPath(lang, `/${g.id}/`), g.image, g.meta.title, g.meta.description, esc(t(lang, "min_read", { n: g.minutes })))).join("")}</ul>` : `<p class="empty">${esc(t(lang, "empty_guides"))}</p>`}</section>
 ${lang !== "en" && missing.length ? `<section><div class="sec-head"><h2>${esc(t(lang, "more_in_english"))}</h2></div><ul class="grid compact">${missing.map((g) => card(lang, `/${g.id}/`, g.image, g.meta.title, g.meta.description, esc(t("en", "min_read", { n: g.minutes })), "en")).join("")}</ul></section>` : ""}
@@ -314,6 +317,8 @@ ${lang !== "en" && missing.length ? `<section><div class="sec-head"><h2>${esc(t(
   fs.writeFileSync(path.join(outDir, "news-sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">${recent.map(({ l, d }) => `<url><loc>${SITE}${langPath(l, `/news/${d.meta.date}/`)}</loc><news:news><news:publication><news:name>${esc(cfg.site.name)}</news:name><news:language>${l === "zh" ? "zh-cn" : l}</news:language></news:publication><news:publication_date>${d.meta.date}</news:publication_date><news:title>${esc(d.meta.title)}</news:title></news:news></url>`).join("")}</urlset>`);
   fs.writeFileSync(path.join(outDir, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\nSitemap: ${SITE}/news-sitemap.xml\n`);
   fs.writeFileSync(path.join(outDir, "feed.xml"), `<?xml version="1.0"?><rss version="2.0"><channel><title>${esc(cfg.site.name)}</title><link>${SITE}/</link><description>${esc(cfg.site.tagline)}</description>${digests.en.slice(0, 20).map((d) => `<item><title>${esc(d.meta.title)}</title><link>${SITE}/news/${d.meta.date}/</link><guid>${SITE}/news/${d.meta.date}/</guid><pubDate>${new Date(d.meta.date).toUTCString()}</pubDate><description>${esc(d.meta.description)}</description></item>`).join("")}</channel></rss>`);
+  // Old or guessed urls of empty languages go to the English page (302: the language gets pages once translated).
+  fs.writeFileSync(path.join(outDir, "_redirects"), codes.filter((l) => !live.includes(l)).map((l) => `${BASE}/${l} ${BASE}/ 302\n${BASE}/${l}/* ${BASE}/:splat 302\n`).join(""));
   // Cloudflare Pages: security headers for every page, long cache for pictures (names never change).
   fs.writeFileSync(path.join(outDir, "_headers"), `/*
   X-Content-Type-Options: nosniff

@@ -129,8 +129,8 @@ test("translated pages exist under the language prefix with lang and dir set", (
   assert.match(read("index.html"), /<html lang="en" dir="ltr"/);
 });
 
-test("every language gets a home, news hub, topic page and search page", () => {
-  for (const code of ["es", "pt", "hi", "ar", "zh", "pl"]) {
+test("every language with content gets a home, news hub, topic page and search page", () => {
+  for (const code of ["es", "ar"]) {
     for (const p of ["index.html", "ai-agents-news/index.html", "shopify-ai-agents-news/index.html", "search/index.html"]) {
       assert.ok(fs.existsSync(path.join(OUT, code, p)), `${code}/${p}`);
     }
@@ -139,7 +139,7 @@ test("every language gets a home, news hub, topic page and search page", () => {
 
 test("UI text is translated on language pages", () => {
   assert.match(read("es/index.html"), /Empieza por lo básico|Empieza con lo básico/);
-  assert.match(read("de/index.html"), /Grundlagen/);
+  assert.match(read("ar/index.html"), /<html lang="ar" dir="rtl">/);
 });
 
 test("hreflang alternates are reciprocal and include x-default", () => {
@@ -163,9 +163,11 @@ test("the language menu offers the same page in each available language", () => 
   const en = read("what-are-ai-agents/index.html");
   const menu = en.slice(en.indexOf('class="lang-menu"'), en.indexOf("</details>", en.indexOf('class="lang-menu"')));
   assert.match(menu, /href="\/hub\/es\/what-are-ai-agents\/"[^>]*hreflang="es"[^>]*>Español/);
-  assert.match(menu, /href="\/hub\/pt\/"[^>]*>Português/, "untranslated page falls back to that language's home");
+  const ex = read("ai-agents-examples/index.html");
+  assert.match(ex.slice(ex.indexOf('class="lang-menu"')), /href="\/hub\/es\/"[^>]*>Español/, "untranslated page falls back to that language's home");
   assert.match(menu, /aria-current="true"[^>]*>English/);
-  assert.equal((menu.match(/<a /g) || []).length, 16);
+  assert.doesNotMatch(menu, /Português|Polski/, "languages with no content are not offered");
+  assert.equal((menu.match(/<a /g) || []).length, 3);
 });
 
 test("translated pages say they were machine-translated and link the original", () => {
@@ -179,12 +181,22 @@ test("language homes list English guides that are not translated yet, marked EN"
   assert.match(es, /href="\/hub\/ai-agents-examples\/"[^>]*hreflang="en"/);
 });
 
-test("languages with no translated content are noindex and left out of the sitemap", () => {
-  assert.match(read("pl/index.html"), /<meta name="robots" content="noindex, follow">/);
+// Regression (Search Console, 4 Oct 2026): 49 empty-language pages were crawled from the menu and reported "Excluded by noindex".
+test("languages with no translated content get no pages; their urls redirect to English", () => {
+  for (const l of ["pl", "pt", "fr"]) assert.ok(!fs.existsSync(path.join(OUT, l)), `${l}/ should not be built`);
   assert.doesNotMatch(read("es/index.html"), /noindex/);
   const sm = read("sitemap.xml");
   assert.ok(sm.includes(`${SITE}/es/what-are-ai-agents/`));
   assert.ok(!sm.includes(`${SITE}/pl/`));
+  const r = read("_redirects");
+  assert.match(r, /^\/hub\/pl\/\* \/hub\/:splat 302$/m);
+  assert.match(r, /^\/hub\/pl \/hub\/ 302$/m);
+  assert.doesNotMatch(r, /\/hub\/(es|ar)\b/, "languages with content are not redirected");
+});
+
+test("only the 404 and search pages are noindex, so Search Console has nothing to report", () => {
+  const noindex = pages().filter((p) => read(p).includes('content="noindex'));
+  assert.deepEqual(noindex.filter((p) => p !== "404.html" && !/(^|\/)search\/index\.html$/.test(p)), []);
 });
 
 test("language news hub lists translated digests", () => {

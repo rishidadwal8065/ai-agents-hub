@@ -46,6 +46,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 
 - [x] TASK-031 Fix: news first, guide rewrites capped (3/run), stop AI calls once the daily allowance is used up
 
+- [x] TASK-032 Fix: Search Console "Excluded by noindex" (49 pages): no pages for empty languages, redirect them to English (regression tests)
+
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI
 - [ ] TASK-017 Lighthouse CI budget (SEO and accessibility ≥ 95)
