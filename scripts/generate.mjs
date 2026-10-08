@@ -29,4 +29,5 @@ await generate({
   complete,
   fetchFn: fetch,
   image,
+  mode: process.env.MODE === "trends" ? "trends" : "all",
 });

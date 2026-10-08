@@ -329,3 +329,9 @@ test("IndexNow key file is published", () => {
   assert.equal(files.length, 1);
   assert.equal(read(files[0]).trim(), files[0].replace(".txt", ""));
 });
+
+test("trend stories get their own news page, listed with the digests", () => {
+  assert.ok(fs.existsSync(path.join(OUT, "news/2026-10-04-openai-devday/index.html")));
+  assert.match(fs.readFileSync(path.join(OUT, "feed.xml"), "utf8"), /\/news\/2026-10-04-openai-devday\//);
+  assert.match(fs.readFileSync(path.join(OUT, "ai-agents-news/index.html"), "utf8"), /OpenAI DevDay puts agents front and centre/);
+});

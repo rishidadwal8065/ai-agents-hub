@@ -214,3 +214,30 @@ test("once the daily AI allowance is used up, no more AI calls are made this run
   assert.equal(calls, 1);
   assert.equal(logs.filter((l) => /allowance/i.test(l)).length, 1, "explained once");
 });
+
+test("trends mode writes stories only for recent niche trends, once each, and nothing else", async () => {
+  const dir = setup();
+  const now = Date.parse("2026-10-08T12:00:00Z");
+  /** @param {string} term @param {string} date @param {string} title */
+  const ti = (term, date, title) => `<item><title>${term}</title><ht:approx_traffic>5000+</ht:approx_traffic><pubDate>${date}</pubDate><ht:news_item><ht:news_item_title>${title}</ht:news_item_title><ht:news_item_url>https://n.example/${encodeURIComponent(term)}</ht:news_item_url><ht:news_item_source>Wire</ht:news_item_source></ht:news_item></item>`;
+  const trends = `<rss><channel>${ti("openai devday", "Wed, 08 Oct 2026 10:00:00 +0000", "OpenAI DevDay launches agent tools")}${ti("how to make sushi", "Wed, 08 Oct 2026 11:00:00 +0000", "Sushi tips")}${ti("chatgpt outage", "Wed, 08 Oct 2026 02:00:00 +0000", "ChatGPT down")}</channel></rss>`;
+  /** @type {string[]} */
+  const urls = [];
+  /** @type {typeof fetch} */
+  const fetchFn = async (u) => { urls.push(String(u)); return new Response(String(u).includes("trends.google.com") ? trends : RSS, { status: 200 }); };
+  /** @type {string[]} */
+  const calls = [];
+  const complete = async (/** @type {string} */ _s, /** @type {string} */ p) => { calls.push(p); return "TITLE: OpenAI DevDay brings new agent tools\nDESC: What happened\n\n## What happened\n\nStory."; };
+  const run = () => generate({ cfg, contentDir: dir, today: "2026-10-08", complete, fetchFn, now, mode: "trends", log: () => {} });
+  await run();
+  assert.deepEqual(fs.readdirSync(path.join(dir, "news")).filter((f) => f.endsWith(".md")), ["2026-10-08-openai-devday.md"]);
+  const story = parseFrontmatter(fs.readFileSync(path.join(dir, "news/2026-10-08-openai-devday.md"), "utf8"));
+  assert.equal(story?.meta.trend, "openai devday");
+  assert.equal(story?.meta.title, "OpenAI DevDay brings new agent tools");
+  assert.equal(calls.length, 1, "no digest, guides or translations in trends mode");
+  assert.ok(calls[0].includes("OpenAI DevDay launches agent tools") && calls[0].includes("Headline 1"));
+  assert.ok(!calls[0].includes("Sushi"));
+  assert.deepEqual(fs.readdirSync(path.join(dir, "pages")), []);
+  await run();
+  assert.equal(calls.length, 1, "a trend is covered only once");
+});

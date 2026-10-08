@@ -17,6 +17,13 @@
     { "slug": "moltbook-ai-agents", "keyword": "moltbook ai agents", "also": ["ai agents moltbook"], "angle": "Explainer on Moltbook, the social network built for AI agents: what it is, how agents post there, why it got attention, security concerns. Be careful to only state well-established facts and say when details are uncertain." }
   ],
   "maxGuidesPerRun": 3,
+  "trends": {
+    "geos": ["US", "IN", "GB"],
+    "hours": 4,
+    "maxPerRun": 2,
+    "niche": ["ai agent", "ai agents", "agentic", "autonomous agent", "multi agent", "mcp server", "model context protocol", "ai coding", "coding agent", "browser agent", "ai automation", "openai", "chatgpt", "gpt 5", "sora", "anthropic", "claude ai", "gemini ai", "google gemini", "deepmind", "meta ai", "llama", "copilot", "grok", "xai", "perplexity", "mistral", "deepseek", "qwen", "hugging face", "llm", "large language model", "artificial intelligence", "ai model", "ai regulation", "ai act", "sam altman", "dario amodei", "demis hassabis"],
+    "exclude": ["stock price", "share price", "lottery", "horoscope"]
+  },
   "translation": { "maxPerRun": 8, "newsLanguages": ["es", "pt", "hi"] },
   "news": {
     "hub": { "slug": "ai-agents-news", "keyword": "ai agents news", "also": ["ai agents news 2026", "ai agents updates", "ai agents agentic ai breakthroughs 2026", "ai agents agentic tools twitter trends 2026"] },

@@ -32,3 +32,12 @@ test("translation settings are validated", () => {
   assert.match(errors, /maxPerRun/);
   assert.match(errors, /newsLanguages/);
 });
+
+test("trend settings are validated", () => {
+  const bad = structuredClone(real);
+  bad.trends = { geos: ["usa"], hours: 0, maxPerRun: -1, niche: [], exclude: [1] };
+  const errors = validateConfig(bad).join("\n");
+  for (const f of ["trends.geos", "trends.hours", "trends.maxPerRun", "trends.niche", "trends.exclude"]) assert.match(errors, new RegExp(f.replace(".", "\\.")));
+  delete bad.trends;
+  assert.deepEqual(validateConfig(bad), [], "trends are optional");
+});

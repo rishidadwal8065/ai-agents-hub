@@ -36,3 +36,9 @@ test("wrangler.jsonc publishes the built site from the ai-agents-hub Worker", ()
 test("content runs notify IndexNow after pushing", () => {
   assert.ok(wf.indexOf("scripts/indexnow.mjs") > wf.indexOf("git push"), "IndexNow runs after the push");
 });
+
+test("a 4-hourly schedule runs the generator in trends-only mode", () => {
+  const cron = wf.match(/cron: "([^"]+)" # every 4 hours/)?.[1];
+  assert.ok(cron && cron.split(" ")[1] === "*/4", "4-hourly cron exists");
+  assert.ok(wf.includes(`MODE: \${{ github.event.schedule == '${cron}' && 'trends' || 'all' }}`), "MODE is tied to that cron");
+});
