@@ -95,13 +95,13 @@ export function buildSite({ contentDir, outDir, cfg, site, css, js }) {
   for (const lang of codes) {
     const base = lang === "en" ? contentDir : path.join(contentDir, "i18n", lang);
     guides[lang] = load(path.join(base, "pages")).filter((g) => order.includes(g.id)).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-    digests[lang] = load(path.join(base, "news")).sort((a, b) => String(b.meta.date).localeCompare(String(a.meta.date)));
+    digests[lang] = load(path.join(base, "news")).sort((a, b) => String(b.meta.date).localeCompare(String(a.meta.date)) || b.id.localeCompare(a.id));
   }
   for (const g of guides.en) g.image = cover(g.id, g.meta.keyword);
-  for (const d of digests.en) d.image = cover(`news-${d.meta.date}`, d.meta.title);
+  for (const d of digests.en) d.image = cover(`news-${d.id}`, d.meta.title);
   for (const lang of codes.slice(1)) {
     for (const g of guides[lang]) g.image = cover(g.id, g.meta.keyword);
-    for (const d of digests[lang]) d.image = cover(`news-${d.meta.date}`, guides.en.length ? d.meta.title : d.meta.title);
+    for (const d of digests[lang]) d.image = cover(`news-${d.id}`, guides.en.length ? d.meta.title : d.meta.title);
   }
   const hubImg = cover(hub, "AI agents news");
 
@@ -109,7 +109,7 @@ export function buildSite({ contentDir, outDir, cfg, site, css, js }) {
   const shared = ["/", "/about/", `/${hub}/`, ...cfg.news.topicPages.map((/** @type {any} */ tp) => `/${tp.slug}/`), "/search/"];
   /** @type {Record<string, Set<string>>} */
   const exists = {};
-  for (const lang of codes) exists[lang] = new Set([...shared, ...guides[lang].map((g) => `/${g.id}/`), ...digests[lang].map((d) => `/news/${d.meta.date}/`)]);
+  for (const lang of codes) exists[lang] = new Set([...shared, ...guides[lang].map((g) => `/${g.id}/`), ...digests[lang].map((d) => `/news/${d.id}/`)]);
   /** @param {string} lang */
   const hasContent = (lang) => lang === "en" || guides[lang].length > 0 || digests[lang].length > 0;
   // Only languages with content get pages: an empty language would be a set of thin noindex pages
@@ -192,7 +192,7 @@ export function buildSite({ contentDir, outDir, cfg, site, css, js }) {
   const card = (lang, href, image, title, desc, label, hl) => `<li><a class="card" href="${href}"${hl ? ` hreflang="${hl}"` : ""}><span class="card-img">${img(image, "")}${hl && hl !== lang ? `<b class="badge">${hl.toUpperCase()}</b>` : ""}</span><span class="card-body"><small>${label}</small><strong>${esc(title)}</strong><span>${esc(desc)}</span></span></a></li>`;
   /** @param {string} lang @param {Entry[]} ds */
   const newsList = (lang, ds) => ds.length
-    ? `<ul class="news-list">${ds.map((d) => `<li><a href="${langPath(lang, `/news/${d.meta.date}/`)}">${img(d.image, "")}<span><time datetime="${d.meta.date}">${formatDate(lang, d.meta.date)}</time><strong>${esc(d.meta.title)}</strong><span>${esc(t(lang, "min_read", { n: d.minutes }))}</span></span></a></li>`).join("")}</ul>`
+    ? `<ul class="news-list">${ds.map((d) => `<li><a href="${langPath(lang, `/news/${d.id}/`)}">${img(d.image, "")}<span><time datetime="${d.meta.date}">${formatDate(lang, d.meta.date)}</time><strong>${esc(d.meta.title)}</strong><span>${esc(t(lang, "min_read", { n: d.minutes }))}</span></span></a></li>`).join("")}</ul>`
     : `<p class="empty">${esc(t(lang, "empty_news"))}${lang === "en" ? "" : ` <a href="/${hub}/" hreflang="en">${esc(t("en", "news_name"))} →</a>`}</p>`;
   /** In translated html, point internal links at the translated page when it exists. @param {string} lang @param {string} html */
   const localizeLinks = (lang, html) => lang === "en" ? html : html.replace(/href="(\/[^"#]*)(#[^"]*)?"/g, (m, p, hash = "") => exists[lang].has(p) ? `href="${langPath(lang, p)}${hash}"` : `href="${p}${hash}" hreflang="en"`);
@@ -241,7 +241,7 @@ ${note}${img(e.image, e.meta.title, false).replace("<img", '<img class="hero"')}
       const scored = pool.map((g) => ({ g, score: String(g.meta.keyword ?? "").split(" ").filter((w) => w.length > 3 && !["agents", "agent"].includes(w) && text.includes(w)).length }));
       const relatedGuides = [...scored.filter((x) => x.score > 0).sort((a, b) => b.score - a.score), ...scored.filter((x) => x.score === 0)].slice(0, 3).map((x) => x.g);
       const relatedHtml = relatedGuides.length ? `<section class="related-guides"><div class="sec-head"><h2>${esc(t(lang, "guides"))}</h2></div><ul class="grid compact">${relatedGuides.map((g) => { const own = G.includes(g); return card(lang, own ? langPath(lang, `/${g.id}/`) : `/${g.id}/`, g.image, g.meta.title, g.meta.description, esc(t(lang, "guide")), own ? undefined : "en"); }).join("")}</ul></section>` : "";
-      articlePage(lang, `/news/${d.meta.date}/`, d, "NewsArticle", [[t(lang, "nav_home"), home], [t(lang, "news_name"), hubPath]],
+      articlePage(lang, `/news/${d.id}/`, d, "NewsArticle", [[t(lang, "nav_home"), home], [t(lang, "news_name"), hubPath]],
         `${relatedHtml}<section><div class="sec-head"><h2>${esc(t(lang, "more_news"))}</h2><a href="${hubPath}">${esc(t(lang, "all_news"))} →</a></div>${newsList(lang, D.filter((x) => x !== d).slice(0, 4))}</section>`);
     }
 
@@ -250,9 +250,9 @@ ${note}${img(e.image, e.meta.title, false).replace("<img", '<img class="hero"')}
     page(lang, `/${hub}/`, { image: hubImg, date: latest?.meta.date,
       title: lang === "en" ? `AI Agents News ${year}: Daily Updates & Agentic AI Breakthroughs` : titled(t(lang, "news_title", { y: year })),
       description: t(lang, "news_desc", { y: year }),
-      jsonld: [crumbsLd(SITE, [[t(lang, "nav_home"), home], [t(lang, "news_name"), hubPath]]), ...(D.length ? [itemList(t(lang, "news_name"), D.slice(0, 20).map((d) => ({ url: langPath(lang, `/news/${d.meta.date}/`), name: String(d.meta.title) })))] : [])],
+      jsonld: [crumbsLd(SITE, [[t(lang, "nav_home"), home], [t(lang, "news_name"), hubPath]]), ...(D.length ? [itemList(t(lang, "news_name"), D.slice(0, 20).map((d) => ({ url: langPath(lang, `/news/${d.id}/`), name: String(d.meta.title) })))] : [])],
       body: `<section class="hero-band small"><span class="eyebrow"><i class="dot"></i>${esc(t(lang, "news_eyebrow"))}</span><h1>${esc(t(lang, "news_title", { y: year }))}</h1><p class="lead">${esc(t(lang, "news_lead"))}</p></section>
-${latest ? `<div class="sec-head"><h2>${esc(t(lang, "todays_digest"))}</h2></div><ul class="grid feature">${card(lang, langPath(lang, `/news/${latest.meta.date}/`), latest.image, latest.meta.title, latest.meta.description, formatDate(lang, latest.meta.date))}</ul>${D.length > 1 ? `<div class="sec-head"><h2>${esc(t(lang, "archive"))}</h2></div>${newsList(lang, D.slice(1))}` : ""}` : newsList(lang, [])}` });
+${latest ? `<div class="sec-head"><h2>${esc(t(lang, "todays_digest"))}</h2></div><ul class="grid feature">${card(lang, langPath(lang, `/news/${latest.id}/`), latest.image, latest.meta.title, latest.meta.description, formatDate(lang, latest.meta.date))}</ul>${D.length > 1 ? `<div class="sec-head"><h2>${esc(t(lang, "archive"))}</h2></div>${newsList(lang, D.slice(1))}` : ""}` : newsList(lang, [])}` });
 
     // Topic pages
     for (const tp of cfg.news.topicPages) {
@@ -268,7 +268,7 @@ ${latest ? `<div class="sec-head"><h2>${esc(t(lang, "todays_digest"))}</h2></div
     const items = [
       ...G.map((g) => ({ href: langPath(lang, `/${g.id}/`), hl: lang, e: g, label: t(lang, "guide") })),
       ...missing.map((g) => ({ href: `/${g.id}/`, hl: "en", e: g, label: t(lang, "guide") })),
-      ...D.map((d) => ({ href: langPath(lang, `/news/${d.meta.date}/`), hl: lang, e: d, label: formatDate(lang, d.meta.date) })),
+      ...D.map((d) => ({ href: langPath(lang, `/news/${d.id}/`), hl: lang, e: d, label: formatDate(lang, d.meta.date) })),
     ];
     page(lang, "/search/", { image: hubImg, title: `${t(lang, "search")} | ${cfg.site.name}`, description: t(lang, "search_lead"),
       body: `<section class="hero-band small"><h1>${esc(t(lang, "search"))}</h1><p class="lead">${esc(t(lang, "search_lead"))}</p>
@@ -314,9 +314,9 @@ ${lang !== "en" && missing.length ? `<section><div class="sec-head"><h2>${esc(t(
   const newest = digests.en[0]?.meta.date ?? "";
   const cutoff = newest ? new Date(Date.parse(newest) - 2 * 864e5).toISOString().slice(0, 10) : "";
   const recent = codes.flatMap((l) => digests[l].filter((d) => String(d.meta.date) >= cutoff && hasContent(l)).map((d) => ({ l, d })));
-  fs.writeFileSync(path.join(outDir, "news-sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">${recent.map(({ l, d }) => `<url><loc>${SITE}${langPath(l, `/news/${d.meta.date}/`)}</loc><news:news><news:publication><news:name>${esc(cfg.site.name)}</news:name><news:language>${l === "zh" ? "zh-cn" : l}</news:language></news:publication><news:publication_date>${d.meta.date}</news:publication_date><news:title>${esc(d.meta.title)}</news:title></news:news></url>`).join("")}</urlset>`);
+  fs.writeFileSync(path.join(outDir, "news-sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">${recent.map(({ l, d }) => `<url><loc>${SITE}${langPath(l, `/news/${d.id}/`)}</loc><news:news><news:publication><news:name>${esc(cfg.site.name)}</news:name><news:language>${l === "zh" ? "zh-cn" : l}</news:language></news:publication><news:publication_date>${d.meta.date}</news:publication_date><news:title>${esc(d.meta.title)}</news:title></news:news></url>`).join("")}</urlset>`);
   fs.writeFileSync(path.join(outDir, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\nSitemap: ${SITE}/news-sitemap.xml\n`);
-  fs.writeFileSync(path.join(outDir, "feed.xml"), `<?xml version="1.0"?><rss version="2.0"><channel><title>${esc(cfg.site.name)}</title><link>${SITE}/</link><description>${esc(cfg.site.tagline)}</description>${digests.en.slice(0, 20).map((d) => `<item><title>${esc(d.meta.title)}</title><link>${SITE}/news/${d.meta.date}/</link><guid>${SITE}/news/${d.meta.date}/</guid><pubDate>${new Date(d.meta.date).toUTCString()}</pubDate><description>${esc(d.meta.description)}</description></item>`).join("")}</channel></rss>`);
+  fs.writeFileSync(path.join(outDir, "feed.xml"), `<?xml version="1.0"?><rss version="2.0"><channel><title>${esc(cfg.site.name)}</title><link>${SITE}/</link><description>${esc(cfg.site.tagline)}</description>${digests.en.slice(0, 20).map((d) => `<item><title>${esc(d.meta.title)}</title><link>${SITE}/news/${d.id}/</link><guid>${SITE}/news/${d.id}/</guid><pubDate>${new Date(d.meta.date).toUTCString()}</pubDate><description>${esc(d.meta.description)}</description></item>`).join("")}</channel></rss>`);
   // Old or guessed urls of empty languages go to the English page (302: the language gets pages once translated).
   fs.writeFileSync(path.join(outDir, "_redirects"), codes.filter((l) => !live.includes(l)).map((l) => `${BASE}/${l} ${BASE}/ 302\n${BASE}/${l}/* ${BASE}/:splat 302\n`).join(""));
   // Cloudflare Pages: security headers for every page, long cache for pictures (names never change).

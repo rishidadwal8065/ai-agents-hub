@@ -5,6 +5,7 @@ import path from "node:path";
 import { toFrontmatter, parseFrontmatter, parseRss, parseAiHeader, isStale, titleCase } from "./lib/content.mjs";
 import { planTranslations, sameLinks } from "./lib/translate.mjs";
 import { LANGUAGES, language } from "./lib/i18n.mjs";
+import { parseTrendsRss, recentTrends, nicheMatch, trendKey } from "./lib/trends.mjs";
 import { isGenericTitle, fallbackDigestTitle, guideIssues, cleanGuide, titleHasKeyword } from "./lib/quality.mjs";
 
 export const REFRESH_DAYS = 90;
@@ -13,7 +14,7 @@ const MAX_IMAGE_FAILURES = 3;
 /**
  * @typedef {(system: string, prompt: string) => Promise<string>} Complete
  * @typedef {(prompt: string) => Promise<Buffer>} ImageFn
- * @typedef {{ cfg: any, contentDir: string, today: string, complete: Complete | null, fetchFn: typeof fetch, image?: ImageFn | null, log?: (msg: string) => void }} Options
+ * @typedef {{ cfg: any, contentDir: string, today: string, complete: Complete | null, fetchFn: typeof fetch, image?: ImageFn | null, log?: (msg: string) => void, now?: number, mode?: "all" | "trends" }} Options
  */
 
 /** @param {any} cfg */
@@ -179,6 +180,68 @@ Headlines:\n${list}`), ["TITLE", "DESC"]);
   log(`news: digest written from ${items.length} headlines`);
 }
 
+/**
+ * Short news stories on Google Trends searches from the last few hours that fit the site's niche.
+ * Output: content/news/<today>-<trend>.md. content/news/trends-seen.json stops a trend being covered twice.
+ * @param {Options} o
+ */
+async function trendNews({ cfg, contentDir, today, complete, fetchFn, log = console.log, now = Date.now() }) {
+  const tc = cfg.trends;
+  if (!complete || !tc) return;
+  const seenFile = path.join(contentDir, "news", "trends-seen.json");
+  /** @type {Set<string>} */
+  const seen = new Set(fs.existsSync(seenFile) ? JSON.parse(fs.readFileSync(seenFile, "utf8")) : []);
+  const get = async (/** @type {string} */ url) => (await fetchFn(url, { headers: { "user-agent": "Mozilla/5.0 ai-agents-hub" }, signal: AbortSignal.timeout(30000) })).text();
+  /** @type {Map<string, import("./lib/trends.mjs").Trend & { match: string }>} */
+  const picks = new Map();
+  for (const geo of tc.geos) {
+    try {
+      for (const t of recentTrends(parseTrendsRss(await get(`https://trends.google.com/trending/rss?geo=${encodeURIComponent(geo)}`)), now, tc.hours)) {
+        const key = trendKey(t.term);
+        const match = nicheMatch(t, tc.niche, tc.exclude ?? []);
+        if (!key || seen.has(key) || picks.has(key)) continue;
+        if (match) picks.set(key, { ...t, match }); else log(`trends ${geo}: "${t.term}" is off-niche, skipped`);
+      }
+    } catch (e) { log(`trends ${geo}: ${e instanceof Error ? e.message : e}`); }
+  }
+  if (!picks.size) return log(`trends: no new niche trends in the last ${tc.hours} hours`);
+  let written = 0;
+  for (const [key, t] of picks) {
+    if (written >= tc.maxPerRun) { log(`trends: limit of ${tc.maxPerRun} per run reached`); break; }
+    const out = path.join(contentDir, "news", `${today}-${key}.md`);
+    try {
+      /** @type {Map<string, { title: string, link: string, source: string }>} */
+      const heads = new Map(t.news.map((n) => [n.title, n]));
+      try {
+        for (const it of parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(`"${t.term}" when:1d`)}&hl=en-US&gl=US&ceid=US:en`)).slice(0, 10)) heads.set(it.title, it);
+      } catch (e) { log(`trend ${key}: news search failed (${e instanceof Error ? e.message : e})`); }
+      const list = [...heads.values()].slice(0, 15);
+      if (list.length < 2) { log(`trend ${key}: not enough headlines yet, retrying next run`); continue; }
+      const parsed = parseAiHeader(await complete(systemPrompt(cfg), `"${t.term}" is trending on Google right now (${t.traffic || "rising"} searches; related to ${t.match}). Write a short news story (350-600 words) explaining what is happening and why people are searching for it, using ONLY the headlines below. You only have headlines, not full articles, so never claim details beyond what a headline says, and say what is still unclear.
+
+Structure: a 2-sentence opening with the news; "## What happened" citing sources as [Source name](link); "## Why it matters" for people following AI and AI agents, clearly your interpretation.
+
+Output format:
+Line 1: "TITLE: " + a specific news headline (at most 70 characters) that names the people, companies or products involved.
+Line 2: "DESC: " + a meta description (at most 155 characters).
+Then a blank line and the story.
+
+Headlines:\n${list.map((h, i) => `${i + 1}. ${h.title} — ${h.source} — ${h.link}`).join("\n")}`), ["TITLE", "DESC"]);
+      if (!parsed) { log(`trend ${key}: AI output had no TITLE/DESC lines, skipped`); continue; }
+      const aiTitle = parsed.fields.TITLE.trim();
+      const title = isGenericTitle(aiTitle) ? fallbackDigestTitle(list[0].title) : aiTitle.slice(0, 90);
+      fs.writeFileSync(out, toFrontmatter({ title, description: parsed.fields.DESC.slice(0, 160), date: today, topics: ["trending"], trend: t.term }) + cleanGuide(parsed.body) + "\n");
+      seen.add(key);
+      fs.writeFileSync(seenFile, JSON.stringify([...seen].slice(-2000)));
+      written++;
+      log(`trend ${key}: written`);
+    } catch (e) {
+      if (e instanceof BudgetExhausted) return;
+      log(`trend ${key}: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+}
+
 /** @param {Options} o */
 async function images({ cfg, contentDir, image, log = console.log }) {
   if (!image) return;
@@ -190,7 +253,7 @@ async function images({ cfg, contentDir, image, log = console.log }) {
   ];
   for (const f of fs.readdirSync(path.join(contentDir, "news")).filter((f) => f.endsWith(".md"))) {
     const m = readMeta(path.join(contentDir, "news", f));
-    if (m) wanted.push([`news-${m.date}`, m.title]);
+    if (m) wanted.push([`news-${f.replace(/\.md$/, "")}`, m.title]);
   }
   let failures = 0;
   for (const [name, subject] of wanted) {
@@ -271,7 +334,10 @@ export async function generate(input) {
   const o = { ...input, log, complete: withBudget(input.complete, log) };
   for (const d of ["pages", "news", "images"]) fs.mkdirSync(path.join(o.contentDir, d), { recursive: true });
   // Most important first: today's news, then guide rewrites, then translations (free daily allowance).
-  try { await news(o); } catch (e) { if (!(e instanceof BudgetExhausted)) log(`news: ${e instanceof Error ? e.message : e}`); }
+  // "trends" runs every few hours and only covers what is trending, leaving the rest of the free allowance to the daily run.
+  if (o.mode !== "trends") try { await news(o); } catch (e) { if (!(e instanceof BudgetExhausted)) log(`news: ${e instanceof Error ? e.message : e}`); }
+  await trendNews(o);
+  if (o.mode === "trends") return images(o);
   await guides(o);
   await translations(o);
   await images(o);

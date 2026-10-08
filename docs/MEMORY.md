@@ -15,6 +15,7 @@ Code complete for v1 and verified locally (`npm run verify`: 121 tests pass, 99%
 - Advanced SEO (see docs/SEO.md): News sitemap, IndexNow, rich structured data, About page
 - Content quality v2 (4 Oct 2026): stricter brief + quality gates; 3 guides are rewritten per run (about 4 days), translations follow; the free AI allowance resets at 00:00 UTC
 - Search Console fix (7 Oct 2026): empty languages no longer get noindex placeholder pages (were 49 "Excluded by noindex"); they 302 to English until translated
+- Trending news (8 Oct 2026): a 4-hourly run (MODE=trends) reads Google Trends "trending now" RSS for US/IN/GB, keeps searches from the last 4 hours that match `trends.niche`, and writes up to 2 stories per run to content/news/<date>-<trend>.md (deduped via trends-seen.json). News URLs now use the file name, so digests keep /news/<date>/
 - Security hardening: escaping raw HTML, link-scheme allow-list, JPEG check, account-id validation
 
 ## Current task

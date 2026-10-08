@@ -48,6 +48,8 @@ Workflow per task: Understand → Plan → Test first → Implement → `npm run
 
 - [x] TASK-032 Fix: Search Console "Excluded by noindex" (49 pages): no pages for empty languages, redirect them to English (regression tests)
 
+- [x] TASK-033 Trending news: every 4 hours, short stories on Google Trends searches from the last 4 hours that match the niche list in keywords.json (`trends`)
+
 ## Phase 3: Hardening
 - [ ] TASK-016 Playwright e2e at 375 / 768 / 1280px (home → guide → news), run in CI
 - [ ] TASK-017 Lighthouse CI budget (SEO and accessibility ≥ 95)

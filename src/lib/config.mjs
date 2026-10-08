@@ -58,6 +58,15 @@ export function validateConfig(cfg) {
     if (!Number.isInteger(tr?.maxPerRun) || tr.maxPerRun < 0 || tr.maxPerRun > 100) errors.push("translation.maxPerRun must be an integer from 0 to 100");
     if (!Array.isArray(tr?.newsLanguages) || tr.newsLanguages.some((/** @type {unknown} */ l) => typeof l !== "string" || !KNOWN.has(l) || l === "en")) errors.push("translation.newsLanguages must list non-English language codes from src/lib/i18n.mjs");
   }
+  if (cfg.trends !== undefined) {
+    const tr = cfg.trends;
+    const words = (/** @type {unknown} */ a) => Array.isArray(a) && a.every((w) => typeof w === "string" && w.trim().length > 1);
+    if (!Array.isArray(tr?.geos) || tr.geos.length === 0 || tr.geos.some((/** @type {unknown} */ g) => typeof g !== "string" || !/^[A-Z]{2}$/.test(g))) errors.push("trends.geos must list 2-letter country codes like \"US\"");
+    if (typeof tr?.hours !== "number" || tr.hours <= 0 || tr.hours > 48) errors.push("trends.hours must be a number from 1 to 48");
+    if (!Number.isInteger(tr?.maxPerRun) || tr.maxPerRun < 0 || tr.maxPerRun > 20) errors.push("trends.maxPerRun must be an integer from 0 to 20");
+    if (!words(tr?.niche) || tr.niche.length === 0) errors.push("trends.niche must be a non-empty list of words");
+    if (tr?.exclude !== undefined && !words(tr.exclude)) errors.push("trends.exclude must be a list of words");
+  }
   return errors;
 }
 

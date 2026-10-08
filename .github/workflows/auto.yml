@@ -1,7 +1,8 @@
 name: Generate content (Cloudflare deploys on push)
 on:
   schedule:
-    - cron: "17 6 * * *" # daily 06:17 UTC
+    - cron: "17 6 * * *" # daily 06:17 UTC: digest, guides, translations, trends
+    - cron: "47 */4 * * *" # every 4 hours: only stories on niche Google Trends searches
   workflow_dispatch:
   push:
     branches: [main]
@@ -49,6 +50,7 @@ jobs:
           AI_MODEL: ${{ vars.AI_MODEL }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }} # free text (Llama 3.3) + pictures (FLUX) on Workers AI
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          MODE: ${{ github.event.schedule == '47 */4 * * *' && 'trends' || 'all' }}
         run: npm run generate
       # Build before committing: new content that breaks the build is never published or saved.
       - run: npm run build
@@ -62,7 +64,7 @@ jobs:
           git add content
           # Pushes made with GITHUB_TOKEN do not start new workflow runs, so the commit needs no skip-ci marker.
           # Cloudflare's Git integration sees this push and deploys the Worker (see wrangler.jsonc).
-          git diff --cached --quiet || (git commit -m "content: auto update $(date -u +%F)" && git push)
+          git diff --cached --quiet || (git commit -m "content: auto update $(date -u '+%F %H:%M')" && git push)
       # Once Cloudflare has deployed the push above, tell Bing, Yandex and others about new URLs.
       - name: Notify search engines (IndexNow)
         if: github.event_name != 'push'
